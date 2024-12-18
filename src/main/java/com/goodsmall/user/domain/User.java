@@ -1,4 +1,4 @@
-package com.goodsmall.user.entity;
+package com.goodsmall.user.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +17,7 @@ public class User {
     @Column(name="user_name",nullable = false)
     private String userName;
 
-    @Column(name="phone_Number",nullable = false)
+    @Column(name="phone_number",nullable = false)
     private String phoneNumber;
 
     @Column(name="address",nullable = false)
