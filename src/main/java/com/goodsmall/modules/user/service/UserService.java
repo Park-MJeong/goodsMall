@@ -1,10 +1,14 @@
-package com.goodsmall.user.service;
+package com.goodsmall.modules.user.service;
 
-import com.goodsmall.email.EmailService;
-import com.goodsmall.redis.RedisService;
+import com.goodsmall.common.email.EmailService;
+import com.goodsmall.common.redis.RedisService;
+import com.goodsmall.modules.user.dto.UserRequestDto;
+import com.goodsmall.modules.user.domain.User;
+import com.goodsmall.modules.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -16,10 +20,34 @@ import java.util.concurrent.TimeUnit;
 public class UserService {
     private final EmailService emailService;
     private final RedisService redisService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${spring.mail.auth-code-expiration-millis}")
     private int timeout;
 
+
+    public UserRequestDto signup(UserRequestDto requestDto) {
+        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getCertifyCode());
+
+        boolean checkData = redisService.checkData(requestDto.getEmail(), requestDto.getCertifyCode());
+        if (checkData) {
+            String password=passwordEncoder.encode(requestDto.getPassword()); //비밀번호암호화
+            User user =new User(
+                    requestDto.getUserName(),
+                    requestDto.getPhoneNumber(),
+                    requestDto.getAddress(),
+                    requestDto.getEmail(),
+                    password
+            );
+            userRepository.save(user);
+            return requestDto;
+        }
+        else{
+           return null;
+        }
+
+    }
 
     public void certifyEmail(String email) {
 //        1.인증코드 생성 후

@@ -1,4 +1,4 @@
-package com.goodsmall.email;
+package com.goodsmall.common.email;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

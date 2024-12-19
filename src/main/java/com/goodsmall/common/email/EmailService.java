@@ -1,6 +1,6 @@
-package com.goodsmall.email;
+package com.goodsmall.common.email;
 
-import com.goodsmall.redis.RedisService;
+import com.goodsmall.common.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;

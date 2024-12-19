@@ -1,4 +1,4 @@
-package com.goodsmall.redis;
+package com.goodsmall.common.redis;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

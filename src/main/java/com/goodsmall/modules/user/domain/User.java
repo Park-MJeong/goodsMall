@@ -1,9 +1,10 @@
-package com.goodsmall.user.domain;
+package com.goodsmall.modules.user.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 
@@ -29,5 +30,13 @@ public class User {
     @Column(name="password",nullable = false)
     private String password;
 
+    @Builder
+    public User(String userName, String phoneNumber, String address, String email, String password) {
+        this.userName = userName;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.email = email;
+        this.password = password;
+    }
 
 }
