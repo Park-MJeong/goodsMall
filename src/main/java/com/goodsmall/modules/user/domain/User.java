@@ -1,5 +1,6 @@
 package com.goodsmall.modules.user.domain;
 
+import com.goodsmall.modules.user.dto.UserRequestDto;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,13 +35,12 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private UserRoleEnum role;
 
-    @Builder
-    public User(String userName, String phoneNumber, String address, String email, String password) {
-        this.userName = userName;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.email = email;
-        this.password = password;
+    public User(UserRequestDto dto) {
+        this.userName = dto.getUserName();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.address = dto.getAddress();
+        this.email = dto.getEmail();
+        this.password = dto.getPassword();
         this.role = UserRoleEnum.USER;
     }
 

@@ -2,6 +2,8 @@ package com.goodsmall.modules.user.service;
 
 import com.goodsmall.common.email.EmailService;
 import com.goodsmall.common.redis.RedisService;
+import com.goodsmall.common.security.EncryptionUtil.EncryptionService;
+import com.goodsmall.common.security.EncryptionUtil.EncryptionUtil;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.domain.UserRepository;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -21,15 +24,13 @@ public class UserService {
     private final EmailService emailService;
     private final RedisService redisService;
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final EncryptionService encryptionService;
 
     @Value("${spring.mail.auth-code-expiration-millis}")
     private int timeout;
-    @Value("${spring.ADMIN_TOKEN}")
-    private String adminToken;
 
-
-    public UserRequestDto signup(UserRequestDto requestDto) {
+    @Transactional
+    public void signup(UserRequestDto requestDto) {
         log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getCertifyCode());
 
         if(checkEmail(requestDto.getEmail())) {
@@ -37,21 +38,23 @@ public class UserService {
         }
         boolean checkData = redisService.checkData(requestDto.getEmail(), requestDto.getCertifyCode());
         if (checkData) {
-            String password=passwordEncoder.encode(requestDto.getPassword()); //비밀번호암호화
-            User user =new User(
-                    requestDto.getUserName(),
-                    requestDto.getPhoneNumber(),
-                    requestDto.getAddress(),
-                    requestDto.getEmail(),
-                    password
-            );
+            User user = new User(encriptUser(requestDto));
             userRepository.save(user);
-            return requestDto;
         }
         else{
            throw  new IllegalArgumentException("인증번호가 일치하지않습니다.");
         }
 
+    }
+
+//    개인정보 암호화
+    public UserRequestDto encriptUser(UserRequestDto requestDto) {
+        String userName = encryptionService.encryptName(requestDto.getUserName());
+        String phoneNumber = encryptionService.encryptPhone(requestDto.getPhoneNumber());
+        String address = encryptionService.encryptAddress(requestDto.getAddress());
+        String email = encryptionService.encryptEmail(requestDto.getEmail());
+        String password = encryptionService.encryptPhone(requestDto.getPassword());
+        return new UserRequestDto (userName,phoneNumber,address,email,password);
     }
 
     public boolean checkEmail(String email) {
@@ -81,6 +84,8 @@ public class UserService {
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
     }
+
+
 
 
 }

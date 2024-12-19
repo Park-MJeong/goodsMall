@@ -27,10 +27,11 @@ public class UserController {
         userService.certifyEmail(userEmail);
         return ResponseEntity.ok().build();
     }
-        @PostMapping("/signup")
-    public ResponseEntity<UserRequestDto>signup(@RequestBody UserRequestDto userRequestDto) {
+    @PostMapping("/signup")
+    public ResponseEntity<?>signup(@RequestBody UserRequestDto userRequestDto) {
         log.info(userRequestDto.getUserName());
-        return ResponseEntity.ok(userService.signup(userRequestDto));
+        userService.signup(userRequestDto);
+        return ResponseEntity.ok("회원가입 완료");
     }
 
 }
