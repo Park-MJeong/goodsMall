@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
 
@@ -27,8 +27,9 @@ public class UserController {
         userService.certifyEmail(userEmail);
         return ResponseEntity.ok().build();
     }
-        @PostMapping("/user/signup")
-    public ResponseEntity<UserRequestDto>signup(UserRequestDto userRequestDto) {
+        @PostMapping("/signup")
+    public ResponseEntity<UserRequestDto>signup(@RequestBody UserRequestDto userRequestDto) {
+        log.info(userRequestDto.getUserName());
         return ResponseEntity.ok(userService.signup(userRequestDto));
     }
 

@@ -2,7 +2,6 @@ package com.goodsmall.common.redis;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,14 +26,10 @@ public class RedisService {
         template.expire("goodsMall", timeout, timeUnit);
     }
 
-//    인증되었다면 유효기간 전에 값을 삭제해줌
+//    인증코드 일치여부
     public boolean checkData(String email, String certifyCode){
         String data = hashOps.get("goodsMall", email);
-        if(data != null &&data.equals((certifyCode))){
-            template.delete(email);
-            return true;
-        }
-        return false;
+        return data != null && data.equals((certifyCode));
     }
 
     public String getData(String email){

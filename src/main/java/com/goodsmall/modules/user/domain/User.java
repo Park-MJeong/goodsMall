@@ -1,18 +1,18 @@
 package com.goodsmall.modules.user.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 
+
 @Entity
+@Getter
 @NoArgsConstructor
 public class User {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name="user_name",nullable = false)
@@ -30,6 +30,10 @@ public class User {
     @Column(name="password",nullable = false)
     private String password;
 
+    @Column
+    @Enumerated(value = EnumType.STRING)
+    private UserRoleEnum role;
+
     @Builder
     public User(String userName, String phoneNumber, String address, String email, String password) {
         this.userName = userName;
@@ -37,6 +41,10 @@ public class User {
         this.address = address;
         this.email = email;
         this.password = password;
+        this.role = UserRoleEnum.USER;
     }
 
+    public enum UserRoleEnum {
+        USER, ADMIN
+    }
 }

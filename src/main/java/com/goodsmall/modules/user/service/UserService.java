@@ -8,7 +8,7 @@ import com.goodsmall.modules.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -21,15 +21,20 @@ public class UserService {
     private final EmailService emailService;
     private final RedisService redisService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Value("${spring.mail.auth-code-expiration-millis}")
     private int timeout;
+    @Value("${spring.ADMIN_TOKEN}")
+    private String adminToken;
 
 
     public UserRequestDto signup(UserRequestDto requestDto) {
         log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getCertifyCode());
 
+        if(checkEmail(requestDto.getEmail())) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다");
+        }
         boolean checkData = redisService.checkData(requestDto.getEmail(), requestDto.getCertifyCode());
         if (checkData) {
             String password=passwordEncoder.encode(requestDto.getPassword()); //비밀번호암호화
@@ -44,9 +49,13 @@ public class UserService {
             return requestDto;
         }
         else{
-           return null;
+           throw  new IllegalArgumentException("인증번호가 일치하지않습니다.");
         }
 
+    }
+
+    public boolean checkEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
     }
 
     public void certifyEmail(String email) {
@@ -58,6 +67,7 @@ public class UserService {
 //        3.레디스에 해당정보 저장
         redisService.setData(email,certifyCode,timeout,TimeUnit.MILLISECONDS);
     }
+
 //    인증코드 생성
     private String createRandomCode(){
         int startLimit = 48; // number 0~9 => 48~57
