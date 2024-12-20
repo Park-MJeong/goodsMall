@@ -1,12 +1,15 @@
-package com.goodsmall.product.entity;
+package com.goodsmall.modules.product.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
+@Getter
+@Table(name = "products")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
 
     @Column(name="product_name",nullable = false)
     private String productName;
@@ -14,10 +17,8 @@ public class Product {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "price", nullable = false)
-    private int price;
+    @Column(name = "image", nullable = false)
+    private String image;
 
-    @Column(name = "quantity")
-    private int quantity;
 
 }
