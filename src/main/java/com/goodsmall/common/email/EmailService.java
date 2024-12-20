@@ -8,23 +8,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
+    @Value("${spring.mail.auth-code-expiration-millis}")
+    private int timeout;
+
+    private final EmailConfig emailConfig;
     private final JavaMailSender mailSender;
     private final RedisService redisService;
     @Value("${spring.mail.username}")
     private String sender;
 
-    public void sendEmail(String email,String certifyCode){
+    public void sendEmail(String email){
 
-        //0.이미 존재하는 이메일이면 재발송
+        String certifyCode =emailConfig.createRandomCode();
+        //0.db에는 없지만 레디스에는 이미 존재하는 이메일이면 재발송
         if(redisService.getData(email) != null){
             redisService.deleteData(email);
         }
         //1. 이메일 발송
         mailSender.send(createMessage(email, certifyCode));
+        //2. 레디스에 해당 정보 저장
+        redisService.setData(email,certifyCode,timeout, TimeUnit.MILLISECONDS);
         log.info("메일전송완료: 이메일{} 인증번호{}",email,certifyCode);
     }
 
