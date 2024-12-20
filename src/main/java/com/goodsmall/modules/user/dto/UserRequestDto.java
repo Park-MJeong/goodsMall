@@ -13,7 +13,7 @@ public class UserRequestDto {
     private String address;
     private String email;
     private String password;
-    private String certifyCode;
+    private String verifyCode;
 
     public UserRequestDto(String userName, String phoneNumber, String address,
                           String email, String password) {

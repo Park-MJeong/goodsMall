@@ -1,8 +1,11 @@
 package com.goodsmall.modules.user.service;
 
 import com.goodsmall.common.email.EmailService;
+import com.goodsmall.common.exception.ErrorCode;
+import com.goodsmall.common.exception.ErrorException;
 import com.goodsmall.common.redis.RedisService;
 import com.goodsmall.common.security.EncryptionUtil.EncryptionService;
+import com.goodsmall.modules.user.dto.EmailRequestDto;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.domain.UserRepository;
@@ -17,24 +20,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserService {
     private final EmailService emailService;
-    private final RedisService redisService;
     private final UserRepository userRepository;
     private final EncryptionService encryptionService;
-
+    private final RedisService redisService;
 
     @Transactional
     public void signup(UserRequestDto requestDto) {
-        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getCertifyCode());
+        String status = redisService.getStatus(requestDto.getEmail()); //이메일 인증상태
+        log.info(status);
 
-        boolean checkData = redisService.checkData(requestDto.getEmail(), requestDto.getCertifyCode());
-        if (checkData) {
+        assert status != null;
+        if(!status.equals("true")){
+            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        if(checkEmail(requestDto.getEmail())){
+            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        };
+
+        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
             User user = new User(encriptUser(requestDto));
             userRepository.save(user);
-        }
-        else{
-           throw  new IllegalArgumentException("인증번호가 일치하지않습니다.");
-        }
-
     }
 
 //    개인정보 암호화
@@ -53,15 +58,15 @@ public class UserService {
         return userRepository.findByEmail(userEmail).isPresent();
     }
 
-    public void certifyEmail(String email) {
-        log.info("유저가 입력한 이메일 {}",email);
+    public void verifyEmail(EmailRequestDto dto) {
+        String userEmail = encryptionService.encryptEmail(dto.getEmail());
+        log.info("유저가 입력한 이메일 암호화 {}",userEmail);
 
         //0.입력한 이메일이 가입되어있는지 확인
-        if(checkEmail(email)) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다");
-        }
+        if(checkEmail(userEmail)) {
+            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);}
 //        1. 메일을 발송
-        emailService.sendEmail(email);
+        emailService.sendEmail(dto.getEmail());
     }
 
 

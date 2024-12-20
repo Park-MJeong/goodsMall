@@ -29,12 +29,15 @@ public class EmailService {
         //0.db에는 없지만 레디스에는 이미 존재하는 이메일이면 재발송
         if(redisService.getData(email) != null){
             redisService.deleteData(email);
+            log.info("코드를 재발송합니다.");
         }
         //1. 이메일 발송
         mailSender.send(createMessage(email, certifyCode));
+        log.info("메일전송완료: 이메일{} 인증번호{}",email,certifyCode);
+
         //2. 레디스에 해당 정보 저장
         redisService.setData(email,certifyCode,timeout, TimeUnit.MILLISECONDS);
-        log.info("메일전송완료: 이메일{} 인증번호{}",email,certifyCode);
+        log.info("레디스 저장완료");
     }
 
 //    이메일 발송 내역
