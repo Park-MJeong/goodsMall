@@ -1,5 +1,6 @@
 package com.goodsmall.modules.product.controller;
 
+import com.goodsmall.modules.product.dto.ProductDto;
 import com.goodsmall.modules.product.dto.SliceProductDto;
 import com.goodsmall.modules.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
 
@@ -19,7 +20,7 @@ public class ProductController {
     }
 
     /*등록되어 있는 상품 리스트 조회*/
-    @GetMapping("/show-list")
+    @GetMapping("")
     public ResponseEntity<Slice<SliceProductDto>> getProducts(@RequestParam(value = "search")String search,
                                                               @RequestParam(value = "cursor",required = false)Integer cursor,
                                                               @RequestParam(value = "size",required = false)Integer size){
@@ -30,10 +31,10 @@ public class ProductController {
         return ResponseEntity.ok(result);
     }
     /*상품상세정보*/
-//    @GetMapping("{productId}/detail")
-//    public ResponseEntity<ShowProductDto>getProductDetail(String productId ){
-//        productService.getProductDetail(productId);
-//        return ResponseEntity.ok().build();
-//       }
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductDto>getProduct(@PathVariable Long productId ){
+        ProductDto productDto = productService.getProduct(productId);
+        return ResponseEntity.ok(productDto);
+       }
 
 }

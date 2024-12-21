@@ -2,6 +2,7 @@ package com.goodsmall.modules.product.service;
 
 import com.goodsmall.common.SliceUtil;
 import com.goodsmall.modules.product.domain.ProductRepository;
+import com.goodsmall.modules.product.dto.ProductDto;
 import com.goodsmall.modules.product.dto.SliceProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,12 @@ public class ProductService {
         }
 
         return showList;
+    }
+
+    public ProductDto getProduct(Long id){
+        return repository.getProduct(id)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
     }
 
 
