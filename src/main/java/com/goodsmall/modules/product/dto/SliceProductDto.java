@@ -7,26 +7,27 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class SliceShowProductDto {
+public class SliceProductDto {
     private long id;
     private long productId;
     private String productName;
-    private Long price;
-    private String imageUrl;
+    private Long productPrice;
+    private String image;
     private LocalDateTime openDate;
+    private String status;
     private String message; // 메시지 필드 추가
 
     // slice의 한 객체에 담기는 정보
-    public SliceShowProductDto(long id,long productId, String productName, Long price, String imageUrl, LocalDateTime openDate) {
+    public SliceProductDto(long id, String productName, Long price, String image, LocalDateTime openDate,String status) {
         this.id = id;
-        this.productId = productId;
         this.productName = productName;
-        this.price = price;
-        this.imageUrl = imageUrl;
+        this.productPrice = price;
+        this.image = image;
         this.openDate = openDate;
+        this.status = status;
     }
 
-    public SliceShowProductDto(String message) {
+    public SliceProductDto(String message) {
         this.message = message;
     }
 }
