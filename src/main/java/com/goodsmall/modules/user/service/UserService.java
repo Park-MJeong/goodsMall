@@ -31,7 +31,7 @@ public class UserService {
 
         assert status != null;
         if(!status.equals("true")){
-            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            throw new ErrorException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
         if(checkEmail(requestDto.getEmail())){
             throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -59,11 +59,9 @@ public class UserService {
     }
 
     public void verifyEmail(EmailRequestDto dto) {
-        String userEmail = encryptionService.encryptEmail(dto.getEmail());
-        log.info("유저가 입력한 이메일 암호화 {}",userEmail);
 
         //0.입력한 이메일이 가입되어있는지 확인
-        if(checkEmail(userEmail)) {
+        if(checkEmail(dto.getEmail())) {
             throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);}
 //        1. 메일을 발송
         emailService.sendEmail(dto.getEmail());

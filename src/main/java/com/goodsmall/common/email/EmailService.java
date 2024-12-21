@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -13,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@EnableAsync
 public class EmailService {
     @Value("${spring.mail.auth-code-expiration-millis}")
     private int timeout;
@@ -23,23 +26,23 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String sender;
 
+    @Async
     public void sendEmail(String email){
 
-        String certifyCode =emailConfig.createRandomCode();
+        String verifyCode =emailConfig.createRandomCode();
         //0.db에는 없지만 레디스에는 이미 존재하는 이메일이면 재발송
-        if(redisService.getData(email) != null){
+        if(redisService.isEmailExist(email)){
             redisService.deleteData(email);
             log.info("코드를 재발송합니다.");
         }
-        //1. 이메일 발송
-        mailSender.send(createMessage(email, certifyCode));
-        log.info("메일전송완료: 이메일{} 인증번호{}",email,certifyCode);
+//      // 1. 레디스에 정보저장
+        redisService.setData(email,verifyCode,timeout, TimeUnit.MILLISECONDS);
+        log.info("레디스 이메일{} 인증번호{}",email,verifyCode);
 
-        //2. 레디스에 해당 정보 저장
-        redisService.setData(email,certifyCode,timeout, TimeUnit.MILLISECONDS);
-        log.info("레디스 저장완료");
+        // 2. 이메일 비동기 발송
+        mailSender.send(createMessage(email, verifyCode));
+
     }
-
 //    이메일 발송 내역
     private SimpleMailMessage createMessage(String email, String certifyCode) {
         SimpleMailMessage message = new SimpleMailMessage();
