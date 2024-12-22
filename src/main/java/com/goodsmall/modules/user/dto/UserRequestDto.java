@@ -1,7 +1,5 @@
 package com.goodsmall.modules.user.dto;
 
-import com.goodsmall.common.security.EncryptionUtil.EncryptionService;
-import com.goodsmall.modules.user.domain.User;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +13,7 @@ public class UserRequestDto {
     private String password;
     private String verifyCode;
 
+    public UserRequestDto() {}
     public UserRequestDto(String userName, String phoneNumber, String address,
                           String email, String password) {
         this.userName = userName;

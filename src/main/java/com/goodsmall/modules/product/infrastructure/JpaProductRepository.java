@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface JpaProductRepository extends JpaRepository<Product, Long> {
     @Query(
     """
-    SELECT new com.goodsmall.modules.product.dto.SliceProductDto(p.id,p.productName,p.productPrice,p.image,p.openDate,p.status)
+    SELECT new com.goodsmall.modules.product.dto.SliceProductDto(p.id,p.productName,p.productPrice,p.openDate,p.status)
     FROM Product p
     WHERE 1=1
     AND (p.productName LIKE %:keyword% OR :keyword IS NULL)
@@ -22,12 +22,12 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
     AND (p.status = 'Pre-sale' OR p.status = 'On Sale')
     order by p.openDate ASC,p.id ASC
     """)
-    List<SliceProductDto> findOrderByOpenDateDesc(String keyword, int cursor, Pageable pageable);
+    List<SliceProductDto> findOrderByOpenDateDesc(String keyword, Long cursor, Pageable pageable);
 
     @Query(
     """
     SELECT new com.goodsmall.modules.product.dto.ProductDto(
-        p.productName, p.description, p.image, p.productPrice, p.openDate, p.status)
+        p.productName, p.description, p.productPrice, p.openDate, p.status)
     FROM Product p
     WHERE p.id = :id
     AND (p.status = 'Pre-sale' OR p.status = 'On Sale')

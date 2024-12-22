@@ -17,7 +17,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     private final JpaProductRepository jpaProductRepository;
     @Override
-    public List<SliceProductDto> getProductList(String search, int cursor, Pageable pageable) {
+    public List<SliceProductDto> getProductList(String search, Long cursor, Pageable pageable) {
         return jpaProductRepository.findOrderByOpenDateDesc(search, cursor, pageable);
     }
 

@@ -1,4 +1,4 @@
-package com.goodsmall.common;
+package com.goodsmall.common.util;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;

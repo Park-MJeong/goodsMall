@@ -1,73 +1,97 @@
 package com.goodsmall.modules.user.service;
 
-import com.goodsmall.common.email.EmailService;
-import com.goodsmall.common.exception.ErrorCode;
-import com.goodsmall.common.exception.ErrorException;
-import com.goodsmall.common.redis.RedisService;
-import com.goodsmall.common.security.EncryptionUtil.EncryptionService;
-import com.goodsmall.modules.user.dto.EmailRequestDto;
-import com.goodsmall.modules.user.dto.UserRequestDto;
+import com.goodsmall.common.api.ApiResponse;
+import com.goodsmall.common.constant.ErrorCode;
+import com.goodsmall.common.exception.BusinessException;
+import com.goodsmall.common.util.EncryptionUtil;
+import com.goodsmall.common.util.RandomCodeUtil;
 import com.goodsmall.modules.user.domain.User;
+import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.goodsmall.modules.user.dto.EmailRequestDto;
+import com.goodsmall.modules.user.dto.VerifyDto;
+import lombok.AllArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@AllArgsConstructor
 public class UserService {
-    private final EmailService emailService;
-    private final UserRepository userRepository;
-    private final EncryptionService encryptionService;
     private final RedisService redisService;
+    private final MailService mailService;
+    private final UserRepository userRepository;
+    private final RandomCodeUtil randomCodeUtil;
+    private final EncryptionUtil encryptionUtil;
 
-    @Transactional
-    public void signup(UserRequestDto requestDto) {
-        String status = redisService.getStatus(requestDto.getEmail()); //이메일 인증상태
-        log.info(status);
-
-        assert status != null;
-        if(!status.equals("true")){
-            throw new ErrorException(ErrorCode.EMAIL_NOT_VERIFIED);
-        }
-        if(checkEmail(requestDto.getEmail())){
-            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);
-        };
-
-        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
-            User user = new User(encriptUser(requestDto));
-            userRepository.save(user);
-    }
-
-//    개인정보 암호화
-    public UserRequestDto encriptUser(UserRequestDto requestDto) {
-        String userName = encryptionService.encryptName(requestDto.getUserName());
-        String phoneNumber = encryptionService.encryptPhone(requestDto.getPhoneNumber());
-        String address = encryptionService.encryptAddress(requestDto.getAddress());
-        String email = encryptionService.encryptEmail(requestDto.getEmail());
-        String password = encryptionService.encryptPhone(requestDto.getPassword());
-        return new UserRequestDto (userName,phoneNumber,address,email,password);
+    private String encryptData(String data) {
+        return encryptionUtil.encrypt(data);
     }
 
     public boolean checkEmail(String email) {
-        String userEmail = encryptionService.encryptEmail(email);
+        String userEmail = encryptionUtil.encrypt(email);
         log.info("암호화된 이메일{}",userEmail);
         return userRepository.findByEmail(userEmail).isPresent();
     }
 
-    public void verifyEmail(EmailRequestDto dto) {
+    /**
+     *  db에 저장된 이메일확인후 메일 전숭
+     */
+    public ApiResponse<?> sendEmail(EmailRequestDto dto){
+        String email=dto.getEmail();
+        String msg ;
+        if(checkEmail(email)){
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        if(redisService.isEmailExist(email)){msg="인증번호가 재전송 되었습니다.";}
+        else msg= "인증번호가 전송 되었습니다.";
+        String verifyCode = randomCodeUtil.createRandomCode();
+        redisService.setData(email,verifyCode);
+        mailService.sendEmail(email, verifyCode);
+        return ApiResponse.success(msg);
+    }
 
-        //0.입력한 이메일이 가입되어있는지 확인
-        if(checkEmail(dto.getEmail())) {
-            throw new ErrorException(ErrorCode.EMAIL_ALREADY_EXISTS);}
-//        1. 메일을 발송
-        emailService.sendEmail(dto.getEmail());
+    /**
+     *  레디스에 저장된 코드와 일치 확인
+     */
+    public ApiResponse<?> verifyEmail(VerifyDto dto){
+        redisService.checkData(dto);
+        return ApiResponse.success("이메일이 인증되었습니다");
     }
 
 
+    public ApiResponse<?> signup(UserRequestDto requestDto) {
+        String status = redisService.getStatus(requestDto.getEmail()); //이메일 인증상태
+        String userEmail = encryptData(requestDto.getEmail());
+        log.info(status);
+
+        if(checkEmail(userEmail)){
+            throw new BusinessException((ErrorCode.EMAIL_ALREADY_EXISTS));
+        }
+
+        if(status==null || !status.equals("true")){
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
+        User user = new User(createEncryptedUser(requestDto));
+
+        userRepository.save(user);
+
+        return ApiResponse.success("회원가입이 완료되었습니다."+requestDto.getEmail());
+    }
+
+
+    private UserRequestDto createEncryptedUser(UserRequestDto requestDto) {
+        UserRequestDto user = new UserRequestDto();
+        user.setUserName(encryptData(requestDto.getUserName()));
+        user.setPhoneNumber(encryptData(requestDto.getPhoneNumber()));
+        user.setAddress(encryptData(requestDto.getAddress()));
+        user.setEmail(encryptData(requestDto.getEmail()));
+        user.setPassword(encryptData(requestDto.getPassword()));
+        return user;
+    }
 
 
 

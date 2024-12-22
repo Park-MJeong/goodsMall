@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,7 +25,7 @@ public class Product {
     private String image;
 
     @Column(name="product_price",nullable = false)
-    private long productPrice;
+    private BigDecimal productPrice;
 
     @Column(name="product_open_date")
     @JsonFormat(pattern = "yyyy-MM-dd kk:mm:ss")

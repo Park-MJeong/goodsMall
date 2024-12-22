@@ -8,6 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository {
-    List<SliceProductDto> getProductList(String search, int cursor, Pageable pageable);
+    List<SliceProductDto> getProductList(String search, Long cursor, Pageable pageable);
     Optional<ProductDto> getProduct(Long id);
 }

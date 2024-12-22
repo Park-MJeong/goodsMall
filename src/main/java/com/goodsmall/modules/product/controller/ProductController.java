@@ -20,12 +20,12 @@ public class ProductController {
     }
 
     /*등록되어 있는 상품 리스트 조회*/
-    @GetMapping("")
+    @GetMapping("/")
     public ResponseEntity<Slice<SliceProductDto>> getProducts(@RequestParam(value = "search")String search,
-                                                              @RequestParam(value = "cursor",required = false)Integer cursor,
+                                                              @RequestParam(value = "cursor",required = false)Long cursor,
                                                               @RequestParam(value = "size",required = false)Integer size){
         if (cursor == null) {
-            cursor = 0;
+            cursor = 0L;
         }
         Slice<SliceProductDto> result = productService.getProductList(search, cursor, size);
         return ResponseEntity.ok(result);

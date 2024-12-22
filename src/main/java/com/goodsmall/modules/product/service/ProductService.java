@@ -1,6 +1,6 @@
 package com.goodsmall.modules.product.service;
 
-import com.goodsmall.common.SliceUtil;
+import com.goodsmall.common.util.SliceUtil;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import com.goodsmall.modules.product.dto.ProductDto;
 import com.goodsmall.modules.product.dto.SliceProductDto;
@@ -18,13 +18,13 @@ import java.util.List;
 public class ProductService {
     private final ProductRepository repository;
     //
-    public Slice<SliceProductDto> getProductList(String search, int cursor, int size){
+    public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<SliceProductDto> showProducts = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
         Slice<SliceProductDto> showList = SliceUtil.getSlice(showProducts,size);
         if (showList.getNumberOfElements() == 0) {
             List<SliceProductDto> emptyMessageList = List.of(
-                    new SliceProductDto("더 이상 리뷰가 존재하지 않습니다.")
+                    new SliceProductDto("더 이상 상품이 존재하지 않습니다.")
             );
             return SliceUtil.getSlice(emptyMessageList, size);
         }
