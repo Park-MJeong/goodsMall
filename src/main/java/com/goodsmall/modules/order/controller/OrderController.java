@@ -18,24 +18,16 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @GetMapping("/")
+    public ResponseEntity<ApiResponse<?>> getOrderList(@RequestParam Long userId,@RequestParam(defaultValue = "0") int pageNumber,@RequestParam(defaultValue = "10")int pageSize){
 
-    /*등록되어 있는 상품 리스트 조회*/
-//    @GetMapping("/")
-//    public ResponseEntity<Slice<SliceProductDto>> getProducts(@RequestParam(value = "search")String search,
-//                                                              @RequestParam(value = "cursor",required = false)Integer cursor,
-//                                                              @RequestParam(value = "size",required = false)Integer size){
-//        if (cursor == null) {
-//            cursor = 0;
-//        }
-////        Slice<SliceProductDto> result = productService.getProductList(search, cursor, size);
-//        return ResponseEntity.ok(result);
-//    }
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<?>> getOrderList(@PathVariable Long userId,@RequestParam Long cursor,@RequestParam(defaultValue = "10")int size){
-        if (cursor == null) {
-            cursor = 0L;
-        }
-        ApiResponse<?> response =orderService.getOrderList(userId, cursor, size);
+        ApiResponse<?> response =orderService.getOrderList(userId, pageNumber, pageSize);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<?>> getOrderProductList(@PathVariable Long orderId,
+                                                              @RequestParam(defaultValue = "0") int pageNumber,@RequestParam(defaultValue = "10")int pageSize){
+        ApiResponse<?> response =orderService.getOrderProductList(orderId, pageNumber, pageSize);
         return ResponseEntity.ok(response);
     }
 }
