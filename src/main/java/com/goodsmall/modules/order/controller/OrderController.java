@@ -25,9 +25,8 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
     @GetMapping("/{orderId}")
-    public ResponseEntity<ApiResponse<?>> getOrderProductList(@PathVariable Long orderId,
-                                                              @RequestParam(defaultValue = "0") int pageNumber,@RequestParam(defaultValue = "10")int pageSize){
-        ApiResponse<?> response =orderService.getOrderProductList(orderId, pageNumber, pageSize);
+    public ResponseEntity<ApiResponse<?>> getOrderProductList(@PathVariable Long orderId){
+        ApiResponse<?> response =orderService.getOrderProductList(orderId);
         return ResponseEntity.ok(response);
     }
 }

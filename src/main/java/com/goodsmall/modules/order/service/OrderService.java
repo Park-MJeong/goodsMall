@@ -39,16 +39,12 @@ public class OrderService {
         return ApiResponse.success(listDto);
     }
 
-    public ApiResponse<?> getOrderProductList(Long orderId,int pageNumber,int pageSize){
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<OrderProducts> orderProductList = opRepository.getOrderProductList(orderId,pageable);
-        log.info(orderProductList.toString());
+    public ApiResponse<?> getOrderProductList(Long orderId){
+        Order orderProductList = oRepository.getOrderProductsList(orderId);
+        OrderListDto listDto = new OrderListDto(orderProductList);
 
-        List<OrderListDto> list = orderProductList.getContent().stream()
-                .map(OrderListDto::new)
-                .collect(Collectors.toList());
 
-        return ApiResponse.success(list);
+        return ApiResponse.success(listDto);
     }
 
 
