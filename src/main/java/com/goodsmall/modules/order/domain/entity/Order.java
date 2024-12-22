@@ -29,7 +29,7 @@ public class Order {
     @Column(name="status",nullable = false)
     private String status;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
     private List<OrderProducts> orderProducts;
 
     @ManyToOne(fetch = FetchType.LAZY) // N:1 관계로 User를 참조

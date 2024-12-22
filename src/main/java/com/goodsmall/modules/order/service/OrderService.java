@@ -5,15 +5,18 @@ import com.goodsmall.common.util.SliceUtil;
 import com.goodsmall.modules.order.domain.OrderProductRepository;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;
+import com.goodsmall.modules.order.domain.entity.OrderProducts;
 import com.goodsmall.modules.order.dto.OrderListDto;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 public class OrderService {
     private final OrderRepository oRepository;
@@ -25,14 +28,27 @@ public class OrderService {
     }
 
 
-    public ApiResponse<?> getOrderList(Long userId,Long cursor,Integer size){
-        Slice<Order> showOrderList = oRepository.findOrdersWithProducts(userId,cursor, Pageable.ofSize(size+1));
+    public ApiResponse<?> getOrderList(Long userId,int pageNumber,int pageSize){
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Order> orderList = oRepository.getOrderList(userId,pageable);
 
-        List<OrderListDto> listDto = showOrderList.getContent().stream()
+        List<OrderListDto> listDto = orderList.getContent().stream()
                 .map(OrderListDto::new)
                 .collect(Collectors.toList());
 
-        return ApiResponse.success(SliceUtil.getSlice(listDto,size));
+        return ApiResponse.success(listDto);
+    }
+
+    public ApiResponse<?> getOrderProductList(Long orderId,int pageNumber,int pageSize){
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<OrderProducts> orderProductList = opRepository.getOrderProductList(orderId,pageable);
+        log.info(orderProductList.toString());
+
+        List<OrderListDto> list = orderProductList.getContent().stream()
+                .map(OrderListDto::new)
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(list);
     }
 
 
