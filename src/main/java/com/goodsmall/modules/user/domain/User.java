@@ -1,6 +1,5 @@
 package com.goodsmall.modules.user.domain;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import jakarta.persistence.*;
