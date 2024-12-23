@@ -5,6 +5,7 @@ import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.common.util.RandomCodeUtil;
+import com.goodsmall.modules.cart.domain.CartRepository;
 import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.dto.UserRequestDto;
@@ -26,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RandomCodeUtil randomCodeUtil;
     private final EncryptionUtil encryptionUtil;
+    private final CartRepository cartRepository;
 
     private String encryptData(String data) {
         return encryptionUtil.encrypt(data);
@@ -79,10 +81,12 @@ public class UserService {
 
         log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
         User user = new User(createEncryptedUser(requestDto));
-        Cart cart = new Cart();
-
         userRepository.save(user);
+
+        Cart cart = new Cart();
         cart.setUser(user);
+        cartRepository.save(cart);
+
 
         return ApiResponse.success("회원가입이 완료되었습니다."+requestDto.getEmail());
     }
