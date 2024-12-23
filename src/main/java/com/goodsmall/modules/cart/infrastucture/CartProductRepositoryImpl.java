@@ -1,9 +1,9 @@
 package com.goodsmall.modules.cart.infrastucture;
 
-import com.goodsmall.common.constant.ErrorCode;
-import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.modules.cart.domain.CartProductRepository;
+import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.cart.domain.entity.CartProducts;
+import com.goodsmall.modules.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -26,5 +26,10 @@ public class CartProductRepositoryImpl implements CartProductRepository {
     @Override
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    public boolean isProductAlreadyInCart(Cart cart, Product product) {
+        return repository.existsByCartAndProduct(cart,product);
     }
 }
