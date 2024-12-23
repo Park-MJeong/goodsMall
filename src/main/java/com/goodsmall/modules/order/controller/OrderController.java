@@ -1,7 +1,8 @@
 package com.goodsmall.modules.order.controller;
 
 import com.goodsmall.common.api.ApiResponse;
-import com.goodsmall.modules.order.dto.CreateOrderRequestDto;
+import com.goodsmall.modules.order.dto.OrderListRequestDto;
+import com.goodsmall.modules.order.dto.OrderRequestDto;
 import com.goodsmall.modules.order.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,7 @@ public class OrderController {
     /**
      * 해당 주문 내역 안의 상품 리스트 조회
      * GET /api/orders/{orderId}
-     * @param orderId 주문 ID
+     * @param orderId 주문 Id
      * @return 해당 주문 내역 안 상품 리스트
      */
 
@@ -47,15 +48,35 @@ public class OrderController {
     }
 
     /**
-     * 상품 단건 구매하기
-     * POST /api/orders/
-     * @param dto 주문 ID,유저Id,수량을 포함하고 있는 요청 객체
+     * 상품 단건 구매하기 (상품페이지 구매)
+     * POST /api/orders/{userId}
+     * @param userId 유저Id
+     * @param dto 제품 Id,수량을 포함하고 있는 요청 객체
+     * @return 구매 상품 정보
+     */
+
+    @PostMapping("/{userId}")
+    public ResponseEntity<ApiResponse<?>> createOrder(@PathVariable Long userId,@RequestBody OrderRequestDto dto){
+        ApiResponse<?> response = orderService.createOrder(userId,dto);
+        return ResponseEntity.ok(response);
+    }
+    /**
+     * 상품 다건 구매하기 (장바구니 상품 구매)
+     * POST /api/orders/{userId}
+     * @param cartId 장바구니Id
+     * @param dto 제품 Id,수량을 포함하고 있는 요창 객체 (리스트)
      * @return 해당 주문 내역 안 상품 리스트
      */
 
-    @PostMapping("/")
-    public ResponseEntity<ApiResponse<?>> createOrder(@RequestBody CreateOrderRequestDto dto){
-        ApiResponse<?> response = orderService.createOrder(dto);
+    @PostMapping("/carts/{cartId}")
+    public ResponseEntity<ApiResponse<?>> createCartOrder(@PathVariable Long cartId,@RequestBody OrderListRequestDto dto){
+        ApiResponse<?> response = orderService.createCartOrder(cartId, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{orderId}/status")
+    public ResponseEntity<ApiResponse<?>> cancelOrder(@PathVariable Long orderId){
+        ApiResponse<?> response = orderService.cancelOrder(orderId);
         return ResponseEntity.ok(response);
     }
 }

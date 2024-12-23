@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class OrderService {
-    private final OrderRepository oRepository;
+    private final OrderRepository orderRepository;
     private final OrderProductRepository opRepository;
     private final UserRepository userRepository;
     private final ProductService productService;
     private final ProductRepository productRepository;
 
-    public OrderService(OrderRepository oRepository, OrderProductRepository opRepository, UserRepository userRepository, ProductService productService, ProductRepository productRepository) {
-        this.oRepository = oRepository;
+    public OrderService(OrderRepository orderRepository, OrderProductRepository opRepository, UserRepository userRepository, ProductService productService, ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
         this.opRepository = opRepository;
         this.productService = productService;
         this.userRepository = userRepository;
@@ -48,7 +48,7 @@ public class OrderService {
     //주문 내역 리스트
     public ApiResponse<?> getOrderList(Long userId,int pageNumber,int pageSize){
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Order> orderList = oRepository.getOrderList(userId,pageable);
+        Page<Order> orderList = orderRepository.getOrderList(userId,pageable);
 
         List<OrderListDto> listDto = orderList.getContent().stream()
                 .map(OrderListDto::new)
@@ -59,7 +59,7 @@ public class OrderService {
 
     //주문 내역 상세 물품
     public ApiResponse<?> getOrderProductList(Long orderId){
-        Order orderProductList = oRepository.getOrderProductsList(orderId);
+        Order orderProductList = orderRepository.getOrderProductsList(orderId);
         OrderListDto listDto = new OrderListDto(orderProductList);
 
         return ApiResponse.success(listDto);
@@ -73,7 +73,7 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Order order = new Order(user);
         //1.주문 상태 생성
-        oRepository.save(order);
+        orderRepository.save(order);
 
         Product product = productRepository.getProduct(dto.getProductId()).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -94,7 +94,7 @@ public class OrderService {
         order.setUpdatedAt(LocalDateTime.now());
         OrderListDto listDto = new OrderListDto(orderProduct);
         System.out.println(listDto.getProducts());
-        oRepository.save(order);
+        orderRepository.save(order);
         return ApiResponse.success(listDto);
 
     }
@@ -104,7 +104,20 @@ public class OrderService {
     }
 
     public ApiResponse<?> cancelOrder(Long orderId){
-        return null;
+        Order order =orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        if(order.getStatus()!=OrderStatus.COMPLETE && order.getStatus()!=OrderStatus.RETURN_COMPLETE){
+            throw new BusinessException(ErrorCode.ORDER_CANCELLED_FAILED);
+        }
+        productService.updateProductQuantities(order); //재고반영
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
+
+
+        return ApiResponse.success(order.getStatus()+"처리 되었습니다.");
     }
 
 

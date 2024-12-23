@@ -20,7 +20,7 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
         WHERE o.user.id = :userId
         ORDER BY o.createdAt DESC,o.id desc
     """)
-    Page<Order> findOrdersWithProducts(@Param("userId") Long userId, Pageable pageable);
+    Page<Order> findOrdersWithProductsList(@Param("userId") Long userId, Pageable pageable);
 
     @Query(
     """
@@ -31,9 +31,7 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
     WHERE o.id = :orderId
     ORDER BY o.createdAt DESC,o.id desc
     """)
-    Order findOrderById(@Param("orderId") Long orderId);
+    Order findOrderWithProduct(Long orderId);
 
     List<Order> findByStatusAndUpdatedAtBefore(OrderStatus status, LocalDateTime date);
-
-
 }

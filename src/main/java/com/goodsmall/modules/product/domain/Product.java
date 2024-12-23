@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "products")
 public class Product {
     @Id
@@ -41,12 +42,7 @@ public class Product {
 //    @Version // 버전 필드 추가
 //    private Integer version;
 
-    public void setQuantity(int quantity) {
-        this.quantity -= quantity;
-        if (this.quantity < 0) {
-            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
-        }
-    }
+
 //    public void setStatus(String status) {
 //        this.status = status;
 //    }

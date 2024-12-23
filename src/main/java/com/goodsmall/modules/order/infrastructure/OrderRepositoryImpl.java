@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
@@ -19,17 +20,22 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Page<Order> getOrderList(Long userId, Pageable pageable) {
-        return  jpaOrderRepository.findOrdersWithProducts(userId,pageable);
+        return  jpaOrderRepository.findOrdersWithProductsList(userId,pageable);
     }
 
     @Override
     public Order getOrderProductsList(Long orderId) {
-        return jpaOrderRepository.findOrderById(orderId);
+        return jpaOrderRepository.findOrderWithProduct(orderId);
     }
 
     @Override
     public void save(Order order) {
         jpaOrderRepository.save(order);
+    }
+
+    @Override
+    public Optional<Order> findByOrderId(Long orderId) {
+        return jpaOrderRepository.findById(orderId);
     }
 
     @Override

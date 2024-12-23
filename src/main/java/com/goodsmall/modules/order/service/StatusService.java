@@ -34,7 +34,8 @@ public abstract class StatusService {
             order.setStatus(OrderStatus.DELIVERY_NOW);
             order.setUpdatedAt(now);
             orderRepository.save(order);
-            log.info("상태변경{},날짜변경{}",order.getStatus(),order);
+            log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
+
         }
 //        배송중 -> 배송완료
         List<Order> deliveringOrders = orderRepository.findByStatus(OrderStatus.DELIVERY_NOW,now.minusDays(1));
@@ -42,7 +43,8 @@ public abstract class StatusService {
             order.setStatus(OrderStatus.DELIVERY_COMPLETE);
             order.setUpdatedAt(now);
             orderRepository.save(order);
-            log.info("상태변경{},날짜변경{}",order.getStatus(),order);
+            log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
+
         }
 //        배송완료->반품불가
         List<Order> deliveredOrders = orderRepository.findByStatus(OrderStatus.DELIVERY_COMPLETE,now.minusDays(2));
@@ -50,7 +52,7 @@ public abstract class StatusService {
             order.setStatus(OrderStatus.RETURN_NOT_ALLOWED);
             order.setUpdatedAt(now);
             orderRepository.save(order);
-            log.info("상태변경{},날짜변경{}",order.getStatus(),order);
+            log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
         }
 //        반품신청->반품완료 + 재고반영
         List<Order> returnOrders = orderRepository.findByStatus(OrderStatus.RETURN_NOW,now.minusDays(1));
@@ -61,7 +63,7 @@ public abstract class StatusService {
                 product.setQuantity(product.getQuantity() + products.getQuantity());
                 productRepository.save(product);
             }
-            log.info("상태변경{},날짜변경{}",order.getStatus(),order);
+            log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
             orderRepository.save(order);
         }
     }
