@@ -3,12 +3,14 @@ package com.goodsmall.modules.order.service;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
+import com.goodsmall.modules.order.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderProductRepository;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;
 import com.goodsmall.modules.order.domain.entity.OrderProducts;
-import com.goodsmall.modules.order.dto.CreateOrderRequestDto;
 import com.goodsmall.modules.order.dto.OrderListDto;
+import com.goodsmall.modules.order.dto.OrderListRequestDto;
+import com.goodsmall.modules.order.dto.OrderRequestDto;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import com.goodsmall.modules.product.service.ProductService;
@@ -66,47 +68,43 @@ public class OrderService {
 
     //상품 단건 구매
     @Transactional
-    public ApiResponse<?> createOrder(CreateOrderRequestDto dto){
-        User user = userRepository.findById(dto.getUserId())
+    public ApiResponse<?> createOrder(Long userId,OrderRequestDto dto){
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Order order = new Order();
-        //1. 주문 상태 생성
-        if(userRepository.findById(dto.getUserId()).isPresent()){
-            // 1-2. 주문 생성 및 필수 값 설정
-            order.setUser(user);
-            order.setStatus("Pending"); // 초기 상태
-            order.setCreatedAt(LocalDateTime.now());
-            order.setUpdatedAt(LocalDateTime.now());
-            order.setTotalPrice(BigDecimal.ZERO); // 초기값 설정 (나중에 업데이트)
-            // 1-3. 주문 저장
-            oRepository.save(order);
-        }
+        Order order = new Order(user);
+        //1.주문 상태 생성
+        oRepository.save(order);
+
         Product product = productRepository.getProduct(dto.getProductId()).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
 //        2. 제품 재고 확인 및 차감
         BigDecimal totalPrice =BigDecimal.ZERO;
-        OrderProducts orderProduct = new OrderProducts();
+        OrderProducts orderProduct = new OrderProducts(order,product,dto.getQuantity());
 
         if(productService.getProduct(dto.getProductId())!=null){
             productService.decreaseQuantity(dto);
 
-            orderProduct.setOrder(order);
-            orderProduct.setProduct(product);
-            orderProduct.setQuantity(dto.getQuantity());
-            orderProduct.setPrice(product.getProductPrice());
             opRepository.save(orderProduct);
             totalPrice = totalPrice.add(product.getProductPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
         }
         // 3. 주문의 총 가격 업데이트
         order.setTotalPrice(totalPrice);
-        order.setStatus("Completed"); // 상태 변경
+        order.setStatus(OrderStatus.COMPLETE); // 상태 변경
         order.setUpdatedAt(LocalDateTime.now());
-//        order.setOrderProducts(orderProductDto);
         OrderListDto listDto = new OrderListDto(orderProduct);
         System.out.println(listDto.getProducts());
         oRepository.save(order);
         return ApiResponse.success(listDto);
 
+    }
+    public ApiResponse<?> createCartOrder(Long cartId, OrderListRequestDto dto){
+        return null;
+
+    }
+
+    public ApiResponse<?> cancelOrder(Long orderId){
+        return null;
     }
 
 

@@ -30,5 +30,12 @@ public class OrderProducts {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+    public OrderProducts() {}
 
+    public OrderProducts(Order order, Product product, int quantity) {
+        this.order = order;
+        this.product = product;
+        this.quantity = quantity;
+        this.price = product.getProductPrice();
+    }
 }

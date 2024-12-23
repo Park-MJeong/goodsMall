@@ -3,7 +3,7 @@ package com.goodsmall.modules.product.service;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.util.SliceUtil;
-import com.goodsmall.modules.order.dto.CreateOrderRequestDto;
+import com.goodsmall.modules.order.dto.OrderRequestDto;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import com.goodsmall.modules.product.dto.ProductDto;
@@ -52,7 +52,7 @@ public class ProductService {
 //    }
 
     @Transactional
-    public void decreaseQuantity(CreateOrderRequestDto dto){
+    public void decreaseQuantity(OrderRequestDto dto){
         int quantity = dto.getQuantity();
         Product product = repository.getProduct(dto.getProductId()).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));

@@ -1,5 +1,6 @@
 package com.goodsmall.modules.order.dto;
 
+import com.goodsmall.modules.order.OrderStatus;
 import com.goodsmall.modules.order.domain.entity.Order;
 import com.goodsmall.modules.order.domain.entity.OrderProducts;
 import lombok.Getter;
@@ -15,7 +16,7 @@ public class OrderListDto {
     private LocalDateTime orderDate;
     private BigDecimal totalPrice;
     private int totalQuantity;
-    private String status;
+    private OrderStatus status;
     private List<OrderProductDto> products;
 
     /**
