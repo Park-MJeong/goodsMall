@@ -1,11 +1,15 @@
 package com.goodsmall.modules.order.infrastructure;
 
+import com.goodsmall.modules.order.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Repository
@@ -26,6 +30,11 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public void save(Order order) {
         jpaOrderRepository.save(order);
+    }
+
+    @Override
+    public List<Order> findByStatus(OrderStatus status, LocalDateTime date){
+        return jpaOrderRepository.findByStatusAndUpdatedAtBefore(status,date);
     }
 
 
