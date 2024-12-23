@@ -1,5 +1,7 @@
 package com.goodsmall.modules.user.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -33,6 +35,9 @@ public class User {
     @Column
     @Enumerated(value = EnumType.STRING)
     private UserRoleEnum role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Cart cart;
 
     public User(UserRequestDto dto) {
         this.userName = dto.getUserName();

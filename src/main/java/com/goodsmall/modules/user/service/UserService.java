@@ -5,6 +5,7 @@ import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.common.util.RandomCodeUtil;
+import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.UserRepository;
@@ -14,6 +15,7 @@ import lombok.AllArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -61,6 +63,7 @@ public class UserService {
     }
 
 
+    @Transactional
     public ApiResponse<?> signup(UserRequestDto requestDto) {
         String status = redisService.getStatus(requestDto.getEmail()); //이메일 인증상태
         String userEmail = encryptData(requestDto.getEmail());
@@ -76,8 +79,10 @@ public class UserService {
 
         log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
         User user = new User(createEncryptedUser(requestDto));
+        Cart cart = new Cart();
 
         userRepository.save(user);
+        cart.setUser(user);
 
         return ApiResponse.success("회원가입이 완료되었습니다."+requestDto.getEmail());
     }
