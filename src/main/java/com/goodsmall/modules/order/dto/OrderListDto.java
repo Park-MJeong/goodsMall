@@ -27,10 +27,10 @@ public class OrderListDto {
         this.totalPrice = order.getTotalPrice();
         this.status = order.getStatus();
         this.totalQuantity = order.getOrderProducts().stream()
-                .mapToInt(op -> op.getQuantity())
+                .mapToInt(OrderProducts::getQuantity)
                 .sum(); // 수량 합산
         this.products = order.getOrderProducts().stream()
-                .map(op -> new OrderProductDto(op))
+                .map(OrderProductDto::new)
                 .collect(Collectors.toList());
     }
 

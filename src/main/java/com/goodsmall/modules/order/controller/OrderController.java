@@ -3,7 +3,6 @@ package com.goodsmall.modules.order.controller;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.modules.order.dto.CreateOrderRequestDto;
 import com.goodsmall.modules.order.service.OrderService;
-import com.goodsmall.modules.product.domain.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
