@@ -14,7 +14,7 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
         LEFT JOIN FETCH o.orderProducts op
         LEFT JOIN FETCH op.product p
         WHERE o.user.id = :userId
-        ORDER BY o.creatAt DESC,o.id desc
+        ORDER BY o.createdAt DESC,o.id desc
     """)
     Page<Order> findOrdersWithProducts(@Param("userId") Long userId, Pageable pageable);
 
@@ -25,8 +25,10 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
     LEFT JOIN FETCH o.orderProducts op
     LEFT JOIN FETCH op.product p
     WHERE o.id = :orderId
-    ORDER BY o.creatAt DESC,o.id desc
+    ORDER BY o.createdAt DESC,o.id desc
     """)
     Order findOrderById(@Param("orderId") Long orderId);
+
+
 
 }

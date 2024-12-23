@@ -23,28 +23,16 @@ public class OrderListDto {
      * */
     public OrderListDto(Order order) {
         this.id = order.getId();
-        this.orderDate = order.getCreatAt();
+        this.orderDate = order.getCreatedAt();
         this.totalPrice = order.getTotalPrice();
         this.status = order.getStatus();
         this.totalQuantity = order.getOrderProducts().stream()
-                .mapToInt(op -> Integer.parseInt(op.getQuantity()))
+                .mapToInt(op -> op.getQuantity())
                 .sum(); // 수량 합산
         this.products = order.getOrderProducts().stream()
                 .map(op -> new OrderProductDto(op))
                 .collect(Collectors.toList());
     }
-    public OrderListDto(OrderProducts orderProducts) {
-        this.id = orderProducts.getOrder().getId();
-        this.orderDate = orderProducts.getOrder().getCreatAt();
-        this.totalPrice = orderProducts.getOrder().getTotalPrice();
-        this.status = orderProducts.getOrder().getStatus();
-        this.totalQuantity = orderProducts.getOrder().getOrderProducts().stream()
-                .mapToInt(op -> Integer.parseInt(op.getQuantity())) // 수량 합산
-                .sum();
-        this.products = orderProducts.getOrder().getOrderProducts().stream()
-                .map(OrderProductDto::new)
-                .distinct()
-                .collect(Collectors.toList());
-    }
+
 }
 

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 public interface OrderRepository {
     Page<Order> getOrderList(Long userId, Pageable pageable);
     Order getOrderProductsList(Long orderId);
+    void save(Order order);
 
 
 }

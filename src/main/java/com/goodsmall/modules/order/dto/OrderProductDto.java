@@ -19,7 +19,7 @@ public class OrderProductDto {
     public OrderProductDto(OrderProducts orderProduct) {
         this.productId = orderProduct.getProduct().getId();
         this.productName = orderProduct.getProduct().getProductName();
-        this.quantity = Integer.parseInt(orderProduct.getQuantity());
+        this.quantity = orderProduct.getQuantity();
         this.unitPrice = orderProduct.getPrice();
 
         this.totalProductPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));

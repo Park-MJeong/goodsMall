@@ -23,5 +23,10 @@ public class OrderRepositoryImpl implements OrderRepository {
         return jpaOrderRepository.findOrderById(orderId);
     }
 
+    @Override
+    public void save(Order order) {
+        jpaOrderRepository.save(order);
+    }
+
 
 }
