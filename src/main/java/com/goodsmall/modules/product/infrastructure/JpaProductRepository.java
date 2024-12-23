@@ -3,10 +3,8 @@ package com.goodsmall.modules.product.infrastructure;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.dto.ProductDto;
 import com.goodsmall.modules.product.dto.SliceProductDto;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;

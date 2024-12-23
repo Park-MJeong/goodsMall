@@ -33,6 +33,15 @@ public class OrderListDto {
                 .map(OrderProductDto::new)
                 .collect(Collectors.toList());
     }
+    public OrderListDto(OrderProducts orderProducts) {
+        this.id = orderProducts.getOrder().getId();
+        this.orderDate = orderProducts.getOrder().getCreatedAt();
+        this.totalPrice = orderProducts.getOrder().getTotalPrice();
+        this.status = orderProducts.getOrder().getStatus();
+        this.totalQuantity = orderProducts.getQuantity();
+        this.products =List.of(new OrderProductDto(orderProducts));
+//        this.products = Collections.singletonList(new OrderProductDto(orderProducts));
+    }
 
 }
 
