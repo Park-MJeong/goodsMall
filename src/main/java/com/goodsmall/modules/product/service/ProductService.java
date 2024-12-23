@@ -3,6 +3,8 @@ package com.goodsmall.modules.product.service;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.util.SliceUtil;
+import com.goodsmall.modules.order.domain.entity.Order;
+import com.goodsmall.modules.order.domain.entity.OrderProducts;
 import com.goodsmall.modules.order.dto.OrderRequestDto;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
@@ -60,13 +62,27 @@ public class ProductService {
             throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
         }
         log.info("감소 전 수량 {}",product.getQuantity());
-        product.setQuantity(quantity);
+        product.setQuantity(product.getQuantity()-quantity);
         if(product.getQuantity()==0){
             product.setStatus("Sold Out");
         }
         log.info("감소 후 수량 {}",product.getQuantity());
         repository.save(product);
     }
+    public void updateProductQuantities(Order order) {
+        for (OrderProducts products : order.getOrderProducts()) {
+            Product product = products.getProduct();
+            log.info("원래 수량{}", product.getQuantity());
+            product.setQuantity(product.getQuantity() + products.getQuantity());
+            if(product.getStatus().equals("Sold Out")){
+                product.setStatus("On Sale");
+            }
+            log.info(product.getStatus());
+            repository.save(product);
+            log.info("재고반영 수량{}", product.getQuantity());
+        }
+    }
+
 
 
 }
