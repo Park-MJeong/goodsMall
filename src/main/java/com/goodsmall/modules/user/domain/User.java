@@ -5,10 +5,12 @@ import com.goodsmall.modules.user.dto.UserRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @Table(name="users")
 public class User {
@@ -35,8 +37,6 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private UserRoleEnum role;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Cart cart;
 
     public User(UserRequestDto dto) {
         this.userName = dto.getUserName();
