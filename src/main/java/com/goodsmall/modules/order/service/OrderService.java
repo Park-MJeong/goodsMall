@@ -106,11 +106,11 @@ public class OrderService {
         order.setTotalPrice(totalPrice);
         order.setStatus("Completed"); // 상태 변경
         order.setUpdatedAt(LocalDateTime.now());
-//        order.setOrderProducts(orderProduct);
-        oRepository.save(order);
-        OrderListDto listDto = new OrderListDto(order);
+//        order.setOrderProducts(orderProductDto);
+        OrderListDto listDto = new OrderListDto(orderProduct);
         System.out.println(listDto.getProducts());
-        return ApiResponse.success(orderProduct);
+        oRepository.save(order);
+        return ApiResponse.success(listDto);
 
     }
 

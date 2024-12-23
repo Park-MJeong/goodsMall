@@ -12,7 +12,6 @@ public class ProductDto {
     private BigDecimal productPrice;
     private LocalDateTime openDate;
     private String status;
-    private int quantity;
 
     public ProductDto(String productName, String description, BigDecimal productPrice, LocalDateTime openDate, String status) {
         this.productName = productName;
