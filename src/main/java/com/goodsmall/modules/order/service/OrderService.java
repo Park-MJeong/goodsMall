@@ -89,7 +89,7 @@ public class OrderService {
         Product product = productRepository.getProduct(dto.getProductId()).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 //        2. 제품 재고 확인 및 차감
-        BigDecimal totalPrice =BigDecimal.ZERO; ;
+        BigDecimal totalPrice =BigDecimal.ZERO;
         OrderProducts orderProduct = new OrderProducts();
 
         if(productService.getProduct(dto.getProductId())!=null){

@@ -1,8 +1,11 @@
 package com.goodsmall.modules.product.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.goodsmall.common.constant.ErrorCode;
+import com.goodsmall.common.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,9 +24,6 @@ public class Product {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "image", nullable = false)
-    private String image;
-
     @Column(name="product_price",nullable = false)
     private BigDecimal productPrice;
 
@@ -34,9 +34,22 @@ public class Product {
     @Column(name = "quantity")
     private int quantity;
 
+    @Setter
     @Column(name="status")
     private String status;
 
+//    @Version // 버전 필드 추가
+//    private Integer version;
+
+    public void setQuantity(int quantity) {
+        this.quantity -= quantity;
+        if (this.quantity < 0) {
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+        }
+    }
+//    public void setStatus(String status) {
+//        this.status = status;
+//    }
 
 
 }

@@ -9,5 +9,9 @@ import java.util.Optional;
 
 public interface ProductRepository {
     List<SliceProductDto> getProductList(String search, Long cursor, Pageable pageable);
-    Optional<ProductDto> getProduct(Long id);
+    Optional<ProductDto> getProductInformation(Long id);
+    Optional<Product> getProduct(Long id);
+    void save(Product product);
+
+    Optional<Product> getProductAll(Long id);
 }
