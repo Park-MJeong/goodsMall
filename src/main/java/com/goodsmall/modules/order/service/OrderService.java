@@ -42,9 +42,8 @@ public class OrderService {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
     }
-    /**
-     * 주문 내역 리스트
-     */
+
+    //주문 내역 리스트
     public ApiResponse<?> getOrderList(Long userId,int pageNumber,int pageSize){
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Order> orderList = oRepository.getOrderList(userId,pageable);
@@ -56,10 +55,7 @@ public class OrderService {
         return ApiResponse.success(listDto);
     }
 
-    /**
-     * 주문 내역 상세 물품
-     * */
-
+    //주문 내역 상세 물품
     public ApiResponse<?> getOrderProductList(Long orderId){
         Order orderProductList = oRepository.getOrderProductsList(orderId);
         OrderListDto listDto = new OrderListDto(orderProductList);
@@ -67,9 +63,8 @@ public class OrderService {
         return ApiResponse.success(listDto);
     }
 
-    /**
-     * 상품 단건 구매
-     * */
+
+    //상품 단건 구매
     @Transactional
     public ApiResponse<?> createOrder(CreateOrderRequestDto dto){
         User user = userRepository.findById(dto.getUserId())

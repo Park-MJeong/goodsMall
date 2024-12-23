@@ -24,4 +24,12 @@ public class CartProducts {
     @ManyToOne
     @JoinColumn(name="cart_id")
     private Cart cart;
+
+    public CartProducts() {}
+
+    public CartProducts(Cart cart, Product product, int quantity) {
+        this.cart = cart;
+        this.product = product;
+        this.quantity = quantity;
+    }
 }
