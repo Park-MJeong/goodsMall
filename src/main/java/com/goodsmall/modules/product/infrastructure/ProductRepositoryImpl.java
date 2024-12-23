@@ -1,5 +1,6 @@
 package com.goodsmall.modules.product.infrastructure;
 
+import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import com.goodsmall.modules.product.dto.ProductDto;
 import com.goodsmall.modules.product.dto.SliceProductDto;
@@ -22,7 +23,20 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Optional<ProductDto> getProduct(Long id) {
-        return jpaProductRepository.dtofindById(id);
+    public Optional<ProductDto> getProductInformation(Long id) {
+        return jpaProductRepository.dtoFindById(id);
+    }
+    @Override
+    public Optional<Product> getProductAll(Long id) {
+        return jpaProductRepository.findById(id);
+    }
+    @Override
+    public Optional<Product> getProduct(Long id) {
+        return jpaProductRepository.findProduct(id);
+    }
+
+    @Override
+    public void save(Product product) {
+        jpaProductRepository.save(product);
     }
 }
