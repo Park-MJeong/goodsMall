@@ -24,7 +24,8 @@ import java.util.List;
 @Slf4j
 public class ProductService {
     private final ProductRepository repository;
-    //
+
+    //전체 상품 조회
     public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<SliceProductDto> showProducts = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
@@ -53,6 +54,7 @@ public class ProductService {
 //        }
 //    }
 
+//    제품구매시 재고감소
     @Transactional
     public void decreaseQuantity(OrderRequestDto dto){
         int quantity = dto.getQuantity();
@@ -69,6 +71,9 @@ public class ProductService {
         log.info("감소 후 수량 {}",product.getQuantity());
         repository.save(product);
     }
+
+//    주문취소시 재고반영
+    @Transactional
     public void updateProductQuantities(Order order) {
         for (OrderProducts products : order.getOrderProducts()) {
             Product product = products.getProduct();
