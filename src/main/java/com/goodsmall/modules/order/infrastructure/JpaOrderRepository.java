@@ -33,5 +33,6 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
     """)
     Order findOrderWithProduct(Long orderId);
 
+
     List<Order> findByStatusAndUpdatedAtBefore(OrderStatus status, LocalDateTime date);
 }
