@@ -63,16 +63,22 @@ public class OrderController {
     /**
      * 상품 다건 구매하기 (장바구니 상품 구매)
      * POST /api/orders/{userId}
-     * @param cartId 장바구니Id
+     * @param userId Id
      * @param dto 제품 Id,수량을 포함하고 있는 요창 객체 (리스트)
      * @return 해당 주문 내역 안 상품 리스트
      */
 
-    @PostMapping("/carts/{cartId}")
-    public ResponseEntity<ApiResponse<?>> createCartOrder(@PathVariable Long cartId,@RequestBody OrderListRequestDto dto){
-        ApiResponse<?> response = orderService.createCartOrder(cartId, dto);
+    @PostMapping("/carts/{userId}")
+    public ResponseEntity<ApiResponse<?>> createCartOrder(@PathVariable Long userId,@RequestBody OrderListRequestDto dto){
+        ApiResponse<?> response = orderService.createCartOrder(userId, dto);
         return ResponseEntity.ok(response);
     }
+    /**
+     * 상품 상태 수정하기(주문취소,환불)
+     * POST /api/orders/{userId}
+     * @param orderId 주문Id
+     * @return 수정된 주문 정보
+     */
 
     @PostMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<?>> cancelOrder(@PathVariable Long orderId){
