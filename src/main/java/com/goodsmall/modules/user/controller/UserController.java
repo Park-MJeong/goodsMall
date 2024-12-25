@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
 
@@ -24,18 +24,18 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/auth/email-send")
+    @PostMapping("/email-send")
     public ResponseEntity<ApiResponse<?>> sendEmail(@Valid @RequestBody EmailRequestDto dto) {
         ApiResponse<?> response = userService.sendEmail(dto);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/auth/email-verify")
+    @PostMapping("/email-verify")
     public ResponseEntity<ApiResponse<?>>verify(@Valid @RequestBody VerifyDto dto) {
         ApiResponse<?> response = userService.verifyEmail(dto);
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/users/signup")
+    @PostMapping("/signup")
     public ResponseEntity<ApiResponse<?>>signup(@Valid @RequestBody UserRequestDto userRequestDto) {
         ApiResponse<?> response = userService.signup(userRequestDto);
         return ResponseEntity.ok(response);

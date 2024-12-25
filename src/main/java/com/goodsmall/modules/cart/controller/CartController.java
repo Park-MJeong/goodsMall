@@ -5,7 +5,6 @@ import com.goodsmall.modules.cart.dto.CartProductAddRequestDto;
 import com.goodsmall.modules.cart.dto.CartProductUpdateRequestDto;
 import com.goodsmall.modules.cart.service.CartService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +43,6 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-
     /**
      * 장바구니 상품 수량 수정
      * PUT /api/carts/{cartProductId}
@@ -53,7 +51,7 @@ public class CartController {
      * @return 수량 수정 결과
      */
 
-    @PutMapping("/{cartProductId}")
+    @PutMapping("/product/{cartProductId}")
     public ResponseEntity<ApiResponse<?>> updateProductQuantity(@PathVariable Long cartProductId,
                                                                 @RequestBody CartProductUpdateRequestDto dto) {
         ApiResponse<?> response = cartService.updateProductQuantity(cartProductId, dto);

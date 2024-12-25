@@ -74,7 +74,7 @@ public class CartService {
         }
 
         // 1. 해당 상품 재고 파악
-        /* TODO: 추후 품절상품은 장바구니에서 모두 delete ?? 장바구니에서 삭제처리방법생각 */
+        /* TODO: 추후 품절상품은 장바구니에서 모두 delete ?? 장바구니에서 삭제처리방법생각 ,쿼리문만들기*/
         Product product = productRepository.getProduct(productId).orElseThrow(() ->
                 new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
         );
