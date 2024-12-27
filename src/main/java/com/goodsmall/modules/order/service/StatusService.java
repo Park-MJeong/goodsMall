@@ -3,9 +3,6 @@ package com.goodsmall.modules.order.service;
 import com.goodsmall.modules.order.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;
-import com.goodsmall.modules.order.domain.entity.OrderProducts;
-import com.goodsmall.modules.product.domain.Product;
-import com.goodsmall.modules.product.domain.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,11 +15,11 @@ import java.util.List;
 public abstract class StatusService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+    private final OrderService orderService;
 
-    public StatusService(OrderRepository orderRepository, ProductRepository productRepository) {
+    public StatusService(OrderRepository orderRepository, OrderService orderService) {
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
+        this.orderService = orderService;
     }
 
     @Scheduled(cron = "0 0 0 * * *") //자정
@@ -58,16 +55,10 @@ public abstract class StatusService {
         List<Order> returnOrders = orderRepository.findByStatus(OrderStatus.RETURN_NOW,now.minusDays(1));
         for (Order order : returnOrders) {
             order.setStatus(OrderStatus.RETURN_COMPLETE);
-            for (OrderProducts products : order.getOrderProducts()) {
-                Product product = products.getProduct();
-                product.setQuantity(product.getQuantity() + products.getQuantity());
-                productRepository.save(product);
-            }
-            log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
-            orderRepository.save(order);
+            orderService.cancelOrder(order.getId());
         }
     }
 
 
-    protected abstract LocalDateTime now();
+
 }
