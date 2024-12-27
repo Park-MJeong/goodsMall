@@ -26,17 +26,17 @@ class StatusServiceTest {
     private StatusService statusService;
     private Clock clock;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        clock = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneId.systemDefault());
-        statusService = new StatusService(orderRepository, productRepository) {
-            @Override
-            protected LocalDateTime now() {
-                return LocalDateTime.now(clock);
-            }
-        };
-    }
+//    @BeforeEach
+//    void setUp() {
+//        MockitoAnnotations.openMocks(this);
+//        clock = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneId.systemDefault());
+//        statusService = new StatusService(orderRepository, productRepository) {
+//            @Override
+//            protected LocalDateTime now() {
+//                return LocalDateTime.now(clock);
+//            }
+//        };
+//    }
 
     @Test
     void testUpdateStatus() {
