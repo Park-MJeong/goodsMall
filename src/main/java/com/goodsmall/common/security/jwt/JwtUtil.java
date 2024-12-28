@@ -1,10 +1,11 @@
-package com.goodsmall.common.security.Token;
+package com.goodsmall.common.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -16,10 +17,10 @@ import java.util.Date;
 public class JwtUtil {
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
-    private static SecretKey JWT_SECRET_KEY;
+    private static SecretKey secretKey;
 
     public JwtUtil(@Value("${spring.jwt.secret.key}") String jwtSecretKey) {
-        JwtUtil.JWT_SECRET_KEY = Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
+        secretKey = Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -40,17 +41,17 @@ public class JwtUtil {
      * Access토큰생성
      *
      */
-   public String createAccessToken(Long userId,String userName) {
+   public String createAccessToken(Long userId,String email) {
         Claims claims = Jwts.claims();
         claims.put("userId :" , userId);
-        claims.put("userName", userName);
+        claims.put("email", email);
         claims.put("type","ACCESS");
         return BEARER_PREFIX+
                 Jwts.builder()
                         .setClaims(claims)
                         .setIssuedAt(new Date(System.currentTimeMillis()))
                         .setExpiration(createExpiredDate())
-                        .signWith(JWT_SECRET_KEY,SignatureAlgorithm.HS256)
+                        .signWith(secretKey,SignatureAlgorithm.HS256)
                         .compact();
     }
 
@@ -68,30 +69,33 @@ public class JwtUtil {
         claims.put("userId :" ,userId);
         claims.put("userName", userName);
         claims.put("type","REFRESH");
-        log.debug("JWT Secret Key: " + JWT_SECRET_KEY);
+        log.debug("JWT Secret Key: " + secretKey);
         return BEARER_PREFIX+
                 Jwts.builder()
                         .setClaims(claims)
                         .setIssuedAt(new Date(System.currentTimeMillis()))
                         .setExpiration(createRefreshTokenExpiredDate())
-                        .signWith(JWT_SECRET_KEY,SignatureAlgorithm.HS256)
+                        .signWith(secretKey,SignatureAlgorithm.HS256)
                         .compact();
     }
 
 
-    /**
-     * 토큰을 기반으로 유효한 토큰인지 여부를 반환해주는 메서드
-     * - Claim 내에서 사용자 정보를 추출합니다.
-     *
-     * @param token String  : 토큰
-     * @return boolean      : 유효한지 여부 반환
-     */
-    public static boolean isValidToken(String token) {
+    // JWT 토큰 substring
+    public String substringToken(String tokenValue) {
+        if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {
+            return tokenValue.substring(7);
+        }
+        log.error("Not Found Token");
+        throw new NullPointerException("Not Found Token");
+    }
+
+
+    public boolean isValidToken(String token) {
         try {
             Claims claims = getTokenToClaims(token);
             log.info("expireTime :" + claims.getExpiration());
-            log.info("userEmail :" + claims.get("userEmail"));
-            log.info("userName:" + claims.get("userName"));
+            log.info("email :" + claims.get("email"));
+//            log.info("userName:" + claims.get("userName"));
             return true;
         } catch (ExpiredJwtException exception) {
             log.debug("token expired " + token);
@@ -111,7 +115,6 @@ public class JwtUtil {
 
 
 
-
     /**
      * 'JWT' 내에서 'Claims' 정보를 반환하는 메서드
      *
@@ -120,15 +123,15 @@ public class JwtUtil {
      */
 
     private static Claims getTokenToClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(JWT_SECRET_KEY).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
     }
 //    Cliam 내의 유저 아이디
     public String getClaimsToUserId(String token) {
         return  getTokenToClaims(token).get("userId", String.class);
     }
     //    Cliam 내의 유저 이름
-    public String getClaimsToUserName(String token) {
-        return  getTokenToClaims(token).get("userName", String.class);
+    public String getClaimsToUserEmail(String token) {
+        return  getTokenToClaims(token).get("email", String.class);
     }
 
     /**

@@ -1,9 +1,7 @@
 package com.goodsmall.common.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.goodsmall.common.security.Token.JwtUtil;
 import com.goodsmall.common.security.CustomUserDetails;
-import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.modules.user.dto.LoginUserRequestDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,11 +18,9 @@ import java.io.IOException;
 @Slf4j(topic = "로그인 및 JWT 생성")
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final JwtUtil jwtUtil;
-    private final EncryptionUtil encryptionUtil;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, EncryptionUtil encryptionUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-        this.encryptionUtil = encryptionUtil;
         setFilterProcessesUrl("/api/users/login");
     }
 
@@ -51,12 +47,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         log.info("로그인 성공 및 JWT 생성");
         CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
-        String username = encryptionUtil.encrypt(userDetails.getUsername());
+//        String username = userDetails.getUsername();
+        String email = userDetails.getEmail();
         Long userId = userDetails.getId();
 //        String username = authResult.getPrincipal(
 //        String role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
 //
-        String token = jwtUtil.createAccessToken(userId,username);
+        String token = jwtUtil.createAccessToken(userId,email);
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
     }
 

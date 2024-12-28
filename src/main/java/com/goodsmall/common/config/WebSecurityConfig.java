@@ -1,6 +1,8 @@
 package com.goodsmall.common.config;
 
-import com.goodsmall.common.security.Token.JwtUtil;
+import com.goodsmall.common.security.CustomUserDetailsService;
+import com.goodsmall.common.security.jwt.JwtTokenFilter;
+import com.goodsmall.common.security.jwt.JwtUtil;
 import com.goodsmall.common.security.jwt.JwtAuthenticationFilter;
 import com.goodsmall.common.util.EncryptionUtil;
 import org.springframework.context.annotation.Bean;
@@ -24,11 +26,13 @@ public class WebSecurityConfig {
     private final JwtUtil jwtUtil;
     private final EncryptionUtil encryptionUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    public WebSecurityConfig(JwtUtil jwtUtil, EncryptionUtil encryptionUtil, AuthenticationConfiguration authenticationConfiguration) {
+    public WebSecurityConfig(JwtUtil jwtUtil, EncryptionUtil encryptionUtil, AuthenticationConfiguration authenticationConfiguration, CustomUserDetailsService customUserDetailsService) {
         this.jwtUtil = jwtUtil;
         this.encryptionUtil = encryptionUtil;
         this.authenticationConfiguration = authenticationConfiguration;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
 
@@ -44,9 +48,13 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil,encryptionUtil);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
+    }
+    @Bean
+    public JwtTokenFilter jwtTokenFilter() {
+        return new JwtTokenFilter(jwtUtil, customUserDetailsService,encryptionUtil);
     }
 
     @Bean
@@ -69,8 +77,8 @@ public class WebSecurityConfig {
 
 //         필터 관리
 //        addFilterBefore(a,b) b필터 전에 a필터를 먼저 수행(b 전에 a 를 위치하게 함)
-
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); //로그인필터
+        http.addFilterAfter(jwtTokenFilter(), JwtAuthenticationFilter.class); //JWT검증 필터
 
         return http.build();
     }
