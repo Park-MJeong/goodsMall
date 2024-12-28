@@ -23,6 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return repository.findByEmail(userEmail)
                 .map(user -> CustomUserDetails.builder()
                         .id(user.getId())
+                        .email(user.getEmail())
                         .username(user.getUserName())
                         .password(user.getPassword())
                         .role(user.getRole())
