@@ -1,5 +1,7 @@
 package com.goodsmall.common.util;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -16,6 +18,7 @@ public class EncryptionUtil {
     public EncryptionUtil(SecretKey secretKey) {
         this.secretKey = secretKey;
     }
+
 
     public String encrypt(String plainText) {
         try {
