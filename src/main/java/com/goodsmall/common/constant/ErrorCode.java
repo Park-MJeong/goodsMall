@@ -19,6 +19,8 @@ public enum ErrorCode {
     // 로그인, 인증 관련 에러 코드
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "로그인 후 이용해주세요."),
     LOGIN_FAILED(HttpStatus.BAD_REQUEST, "로그인에 실패했습니다. 다시 시도해주세요."),
+    PASSWORD_FAILED(HttpStatus.BAD_REQUEST, "입력하신 정보가 올바르지 않습니다. 다시 입력해주세요."),
+
     JWT_INVALID(HttpStatus.BAD_REQUEST, "인증 정보가 올바르지 않습니다."),
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "인증 정보가 만료되었습니다."),
 
@@ -28,12 +30,16 @@ public enum ErrorCode {
 
     //    유저
     USER_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 유저를 찾을 수 없습니다."),
+
     CART_NOT_FOUND(HttpStatus.BAD_REQUEST,"탈퇴한 유저의 장바구니 입니다."),
     CART_PRODUCT_ALREADY(HttpStatus.BAD_REQUEST,"해당 상품이 이미 장바구니에 존재합니다."),
     CART_PRODUCT_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 장바구니 상품을 찾을 수 없습니다."),
     QUANTITY_INSUFFICIENT(HttpStatus.BAD_REQUEST,"원하시는 수량보다 재고가 적습니다."),
     CART_NOT_QUANTITY(HttpStatus.NOT_FOUND,"해당 장바구니에는 상품이 없습니다."),
+
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 상품을 찾을 수 없습니다."),
+    PRODUCT_SOLD_OUT(HttpStatus.BAD_GATEWAY,"품절상품이 포함되어있습니다."),
+
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."),
     ORDER_CANCELLED_FAILED(HttpStatus.BAD_REQUEST,"주문취소 불가능한 상태입니다.");
 

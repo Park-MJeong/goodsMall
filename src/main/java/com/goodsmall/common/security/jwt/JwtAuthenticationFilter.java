@@ -1,6 +1,9 @@
 package com.goodsmall.common.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.goodsmall.common.api.ApiResponse;
+import com.goodsmall.common.constant.ErrorCode;
+import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.security.CustomUserDetails;
 import com.goodsmall.modules.user.dto.LoginUserRequestDto;
 import jakarta.servlet.FilterChain;
@@ -39,7 +42,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             );
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            throw new BusinessException(ErrorCode.PASSWORD_FAILED);
         }
     }
 
@@ -50,16 +53,28 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 //        String username = userDetails.getUsername();
         String email = userDetails.getEmail();
         Long userId = userDetails.getId();
-//        String username = authResult.getPrincipal(
-//        String role = ((UserDetailsImpl) authResult.getPrincipal()).getUser().getRole();
-//
+
         String token = jwtUtil.createAccessToken(userId,email);
         response.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.setContentType("application/json; charset=UTF-8");
+        ApiResponse<?> res = ApiResponse.success(token);
+        response.getOutputStream().write(objectMapper.writeValueAsString(res).getBytes());
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         log.info("로그인 실패");
-        response.setStatus(401);
+        jwtResponse(response,new BusinessException(ErrorCode.LOGIN_FAILED));
+    }
+
+    private void jwtResponse(HttpServletResponse response, BusinessException e) throws IOException {
+        response.setContentType("application/json; charset=UTF-8");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ApiResponse<String> res = ApiResponse.createException(e.getCode(),e.getMessage());
+        response.setStatus(e.getCode()); //응답헤더 설정
+        response.getOutputStream().write(objectMapper.writeValueAsString(res).getBytes());
     }
 }

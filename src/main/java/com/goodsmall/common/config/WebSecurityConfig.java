@@ -65,12 +65,8 @@ public class WebSecurityConfig {
 
 //        JWT토큰 사용 => 세션 사용 x
         http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.authorizeHttpRequests((authorizeHttpRequests) ->
-                authorizeHttpRequests
-                        .requestMatchers(HttpMethod.POST,"/api/users/email-send").permitAll() //
-                        .requestMatchers(HttpMethod.POST,"/api/users/email-verify").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/api/users/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/api/users/login").permitAll()
+        http.authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/api/users/**").permitAll()
                         .anyRequest().authenticated() //로그인한 사용자만 접근가능
         );
 

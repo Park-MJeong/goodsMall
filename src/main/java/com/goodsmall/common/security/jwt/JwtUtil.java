@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
-@Slf4j
+@Slf4j(topic = "JwtUtil")
 @Component
 public class JwtUtil {
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -31,9 +31,9 @@ public class JwtUtil {
     private static Date createExpiredDate() {
         Calendar c = Calendar.getInstance();
 //        c.add(Calendar.SECOND, 3);        // 10초
-        c.add(Calendar.HOUR, 1);             // 1시간
+//        c.add(Calendar.HOUR, 1);             // 1시간
         // c.add(Calendar.HOUR, 8);             // 8시간
-        // c.add(Calendar.DATE, 1);             // 1일
+         c.add(Calendar.DATE, 1);             // 1일
         return c.getTime();
     }
 
@@ -93,7 +93,7 @@ public class JwtUtil {
     public boolean isValidToken(String token) {
         try {
             Claims claims = getTokenToClaims(token);
-            log.info("expireTime :" + claims.getExpiration());
+            log.info("발급완료:: expireTime :" + claims.getExpiration());
             log.info("email :" + claims.get("email"));
 //            log.info("userName:" + claims.get("userName"));
             return true;
@@ -111,9 +111,6 @@ public class JwtUtil {
             return false;
         }
     }
-
-
-
 
     /**
      * 'JWT' 내에서 'Claims' 정보를 반환하는 메서드
