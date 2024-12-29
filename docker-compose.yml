@@ -1,7 +1,7 @@
 services:
   redis:
     image: redis
-    container_name: redis2
+    container_name: redis1
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
@@ -16,7 +16,7 @@ services:
 
   redis-insight:
     image: redis/redisinsight
-    container_name: redisinsight2
+    container_name: redisinsight1
     restart: always
     ports:
       - 5540:5540
@@ -29,9 +29,9 @@ services:
 
   mysql:
     image: mysql
-    container_name: mysql2
+    container_name: mysql1
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} 
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: goodsmall
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
@@ -55,7 +55,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc://mysql:3306/goodsmall?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/goodsmall?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:

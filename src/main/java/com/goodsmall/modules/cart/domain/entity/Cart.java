@@ -1,7 +1,5 @@
 package com.goodsmall.modules.cart.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.goodsmall.modules.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

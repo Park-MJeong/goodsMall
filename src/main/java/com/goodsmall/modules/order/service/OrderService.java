@@ -96,7 +96,6 @@ public class OrderService {
         order.setStatus(OrderStatus.COMPLETE); // 상태 변경
         order.setUpdatedAt(LocalDateTime.now());
         OrderListDto listDto = new OrderListDto(orderProduct);
-        System.out.println(listDto.getProducts());
         orderRepository.save(order);
         return ApiResponse.success(listDto);
 
@@ -114,7 +113,7 @@ public class OrderService {
         orderRepository.save(order);
         for(OrderRequestDto products : dto.getProductList()){ //상품리스트안에서 각각 상품의 재고먼저확인
             Product product_information = productRepository.getProduct(products.getProductId()).orElseThrow(
-                    () -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                    () -> new BusinessException(ErrorCode.PRODUCT_SOLD_OUT));
             if (product_information.getQuantity() < products.getQuantity()) {
                 throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
             }

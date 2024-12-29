@@ -1,7 +1,6 @@
 package com.goodsmall.modules.cart.dto;
 
 import com.goodsmall.modules.cart.domain.entity.CartProducts;
-import com.goodsmall.modules.order.domain.entity.OrderProducts;
 import lombok.Getter;
 
 import java.math.BigDecimal;
