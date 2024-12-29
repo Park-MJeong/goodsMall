@@ -12,10 +12,12 @@ public interface JpaCartsRepository extends JpaRepository<Cart, Long>{
             FROM Cart c
             LEFT JOIN FETCH c.cartProducts cp
             LEFT JOIN FETCH cp.product p
-            WHERE c.id = :cartId
+            WHERE c.userId = :userId
             AND (p.status = 'Pre-sale' OR p.status = 'On Sale')
             ORDER BY p.openDate asc
             """)
-    Cart findCartById(@Param("cartId") Long cartId);
+    Cart findCartWithProducts(@Param("userId") Long userId);
 
+    @Query("SELECT c FROM Cart c WHERE c.userId = :userId")
+    Cart findByUserId(@Param("userId") Long userId);
 }
