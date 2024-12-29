@@ -35,8 +35,9 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
     )
     Optional<ProductDto> dtoFindById(long id);
 
-//    @Lock(LockModeType.OPTIMISTIC)
     @Query("select p from Product p where p.id= :productId AND (p.status = 'Pre-sale' OR p.status = 'On Sale')")
     Optional<Product> findProduct(long productId);
+
+    Optional<Product> findProductById(long id);
 
 }

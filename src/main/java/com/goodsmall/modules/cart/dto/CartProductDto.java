@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class CartProductDto {
     private Long productId;
     private String productName;
+    private BigDecimal unitProductPrice;
     private BigDecimal totalProductPrice;
     private int quantity;
 
@@ -17,6 +18,7 @@ public class CartProductDto {
         this.productId = cartProduct.getProduct().getId();
         this.productName = cartProduct.getProduct().getProductName();
         this.quantity = cartProduct.getQuantity();
+        this.unitProductPrice = cartProduct.getProduct().getProductPrice();
         this.totalProductPrice = cartProduct.getProduct().getProductPrice().multiply(BigDecimal.valueOf(this.quantity));
     }
 }

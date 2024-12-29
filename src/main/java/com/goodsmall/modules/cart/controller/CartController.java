@@ -38,7 +38,7 @@ public class CartController {
      * @return 장바구니에 추가된 상품 정보
      */
     @PostMapping("/")
-    public ResponseEntity<ApiResponse<?>> updateCart(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid CartProductAddRequestDto dto){
+    public ResponseEntity<ApiResponse<?>> updateCart(@RequestBody @Valid CartProductAddRequestDto dto,@AuthenticationPrincipal CustomUserDetails userDetails){
         ApiResponse<?> response = cartService.updateCart(userDetails.getId(),dto);
         return ResponseEntity.ok(response);
     }
@@ -50,11 +50,9 @@ public class CartController {
      * @return 수량 수정 결과
      */
 
-    @PutMapping("/product")
-    public ResponseEntity<ApiResponse<?>> updateProductQuantity(@RequestBody CartProductUpdateRequestDto dto,
-                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
-        System.out.println(userDetails.getId());
-        ApiResponse<?> response = cartService.updateProductQuantity(userDetails.getId(), dto);
+    @PutMapping("/product/{cartProductId}")
+    public ResponseEntity<ApiResponse<?>> updateProductQuantity(@PathVariable Long cartProductId,@RequestBody CartProductUpdateRequestDto dto) {
+        ApiResponse<?> response = cartService.updateProductQuantity(cartProductId, dto);
         return ResponseEntity.ok(response);
     }
 }

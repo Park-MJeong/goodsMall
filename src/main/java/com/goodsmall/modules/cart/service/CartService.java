@@ -13,6 +13,7 @@ import com.goodsmall.modules.cart.dto.CartProductDto;
 import com.goodsmall.modules.cart.dto.CartProductUpdateRequestDto;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
+import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,14 +28,31 @@ public class CartService {
     private final CartProductRepository cartProductRepository;
     private final ProductRepository productRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final EntityManager em;
 
     /**
      * 장바구니 내 상품리스트 조회 ,dto에 담아서 전달
      * */
     public ApiResponse<?> getCart(Long userId) {
-        Cart cartList = getCartById(userId);
-        CartListDto listDto = new CartListDto(cartList);
-        return ApiResponse.success(listDto);
+//        Cart cartList = getCartById(userId);
+//        CartListDto listDto = new CartListDto(cartList);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 장바구니 조회
+     * 생성되지 않았으면 생성
+     * */
+    @Transactional
+    public Cart getCartByUserId(Long userId){
+        Cart cart = cartRepository.getCartByUserId(userId);
+        if(cart ==null){
+//            조회후 해당 유저의 장바구니 없으면 생성
+            cart = new Cart(userId);
+            cartRepository.save(cart);
+            System.out.println("저장완료");
+        }
+        return cart;
     }
 
     /**
@@ -42,8 +60,8 @@ public class CartService {
      * */
     @Transactional
     public ApiResponse<?> updateCart(Long userId, CartProductAddRequestDto dto){
-//        1. 해당 유저 장바구니 조회,없으면 생성
-        Cart cart = getCartById(userId);
+//        1. 해당 유저 장바구니 조회
+        Cart cart = getCartByUserId(userId);
 
 //        2. 해당 물건이 장바구니에 있으면 중복저장 방지
         Product product =getProduct(dto.getProductId());
@@ -73,27 +91,28 @@ public class CartService {
     public ApiResponse<?> updateProductQuantity(Long cartProductId,CartProductUpdateRequestDto dto) {
         Integer quantity = dto.getQuantity();
 
-        // 장바구니 내 상품정보
+//        1. 장바구니 상품 테이블의 정보 조회
         CartProducts cartProduct = getCartProducts(cartProductId);
-        Cart cart = cartProduct.getCart();   //장바구니 정보, 수정 후 해당 장바구니 내 상품 리스트 출력위해
         Long productId = cartProduct.getProduct().getId();
 
-        //  삭제 상품 처리
+        Cart cart = cartProduct.getCart();   //장바구니 정보, 수정 후 해당 장바구니 내 상품 리스트 출력위해
+
+        System.out.println(dto.isDelete());
         if(dto.isDelete()){
             return deleteCartProduct(cart, cartProductId);
         }
 
-        // 1. 해당 상품 재고 파악
-        /* TODO: 추후 품절상품은 장바구니에서 모두 delete ?? 장바구니에서 삭제처리방법생각 ,쿼리문만들기*/
-        Product product = productRepository.getProduct(productId).orElseThrow(() ->
+        // 2. 해당 상품 재고 파악
+        Product product = productRepository.findById(productId).orElseThrow(() ->
                 new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
         );
-//        if(product.getStatus().equals("Sole Out")){
-//            deleteCartProduct(cart, cartProductId);
-//            return ApiResponse.success("품절된 상품이 장바구니에서 삭제되었습니다.");
-//        }
+//        2-1 품절상품이면 장바구니에서 삭제
+        if(product.getStatus().equals("Sole Out")){
+            deleteCartProduct(cart, cartProductId);
+            return ApiResponse.success("품절된 상품입니다.");
+        }
 
-//        2.수량 파악,예외처리
+//        2-2. 변경 수량과 재고 비교
         if(product.getQuantity()<quantity){
             throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
         }
@@ -115,29 +134,19 @@ public class CartService {
     public ApiResponse<?> deleteCartProduct(Cart cart,Long cartProductId) {
 
         cartProductRepository.delete(cartProductId);
-        Cart updateCart = getCartById(cart.getId());
+        em.flush();
+        em.clear();
 
-        if (updateCart ==null) {
+        Cart updateCart = getCartByUserId(cart.getUserId());
+        System.out.println(updateCart.getCartProducts().size());
+        if (updateCart ==null || updateCart.getCartProducts().isEmpty()) {
             return ApiResponse.success("장바구니가 비었습니다.");
         }
         CartListDto listDto = new CartListDto(updateCart);
         return ApiResponse.success(listDto);
     }
 
-    /**
-     * 장바구니 조회
-     * 생성되지 않았으면 생성
-     * */
-    @Transactional
-    public Cart getCartById(Long userId){
-        Cart cart = cartRepository.getCartByUserId(userId);
-        if(cart ==null){
-            cart = new Cart(userId);
-            cartRepository.save(cart);
-            System.out.println("저장완료");
-        }
-        return cart;
-    }
+
 
     /**
      * 장바구니 상품 테이블의 정보 (개별 상품)
