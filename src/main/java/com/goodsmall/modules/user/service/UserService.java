@@ -3,11 +3,9 @@ package com.goodsmall.modules.user.service;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
-import com.goodsmall.common.security.Token.JwtUtil;
+import com.goodsmall.common.security.jwt.JwtUtil;
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.common.util.RandomCodeUtil;
-import com.goodsmall.modules.cart.domain.CartRepository;
-import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.UserRepository;
@@ -92,7 +90,7 @@ public class UserService {
         if(status==null || !status.equals("true")){
             throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
-        log.info("회원가입: 유저이메일{} 인증코드{}",requestDto.getEmail(),requestDto.getVerifyCode());
+        log.info("회원가입: 유저이메일{}",requestDto.getEmail());
 
 //        개인정보 암호화
         User user = new User(createEncryptedUser(requestDto));
@@ -107,18 +105,18 @@ public class UserService {
      *  로그인
      */
     public ApiResponse<?> login(UserRequestDto requestDto) {
-        String userEmail = encryptionUtil.encrypt(requestDto.getEmail());
-
-//        1. 입력받은 유저의 정보가 있는지 확인
-        Optional<User> loginUser = userRepository.findByEmail(userEmail);
-        if (loginUser.isEmpty()) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-//        2. 비밀번호 일치여부 확인
-        if (!bCryptPasswordEncoder.matches(requestDto.getPassword(), loginUser.get().getPassword())) {
-            throw new BusinessException(ErrorCode.LOGIN_FAILED);
-        }
-        String accessToken = jwtUtil.createAccessToken(loginUser.get().getId(), loginUser.get().getUserName());
+//        String userEmail = encryptionUtil.encrypt(requestDto.getEmail());
+//
+////        1. 입력받은 유저의 정보가 있는지 확인
+//        Optional<User> loginUser = userRepository.findByEmail(userEmail);
+//        if (loginUser.isEmpty()) {
+//            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+//        }
+////        2. 비밀번호 일치여부 확인
+//        if (!bCryptPasswordEncoder.matches(requestDto.getPassword(), loginUser.get().getPassword())) {
+//            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+//        }
+//        String accessToken = jwtUtil.createAccessToken(loginUser.get().getId(), loginUser.get().getUserName());
         return null;
 
     }

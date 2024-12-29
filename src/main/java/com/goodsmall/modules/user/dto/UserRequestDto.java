@@ -11,7 +11,6 @@ public class UserRequestDto {
     private String address;
     private String email;
     private String password;
-    private String verifyCode;
 
     public UserRequestDto() {}
     public UserRequestDto(String userName, String phoneNumber, String address,

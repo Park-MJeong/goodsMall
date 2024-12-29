@@ -1,8 +1,6 @@
 package com.goodsmall.modules.product.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.goodsmall.common.constant.ErrorCode;
-import com.goodsmall.common.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
