@@ -34,9 +34,9 @@ public class CartService {
      * 장바구니 내 상품리스트 조회 ,dto에 담아서 전달
      * */
     public ApiResponse<?> getCart(Long userId) {
-//        Cart cartList = getCartById(userId);
-//        CartListDto listDto = new CartListDto(cartList);
-        return ApiResponse.success(null);
+        Cart cartList = getCartByUserId(userId);
+        CartListDto listDto = new CartListDto(cartList);
+        return ApiResponse.success(listDto);
     }
 
     /**
@@ -83,7 +83,6 @@ public class CartService {
     }
 
 
-
     /**
      * 장바구니 내 상품정보 수정
      * */
@@ -103,7 +102,7 @@ public class CartService {
         }
 
         // 2. 해당 상품 재고 파악
-        Product product = productRepository.findById(productId).orElseThrow(() ->
+        Product product = productRepository.findProductById(productId).orElseThrow(() ->
                 new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
         );
 //        2-1 품절상품이면 장바구니에서 삭제
@@ -128,8 +127,10 @@ public class CartService {
         return ApiResponse.success(listDto);
     }
 
+    /**
+     * 장바구니 내 상품 삭제
+     * */
 
-//    상품 삭제
     @Transactional
     public ApiResponse<?> deleteCartProduct(Cart cart,Long cartProductId) {
 
@@ -156,7 +157,9 @@ public class CartService {
                 ()->new BusinessException(ErrorCode.CART_PRODUCT_NOT_FOUND));
     }
 
-
+    /**
+     * 제품의 수량,품절체크 위한 조회
+     * */
     private Product getProduct(Long productId) {
         return productRepository.getProduct(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));

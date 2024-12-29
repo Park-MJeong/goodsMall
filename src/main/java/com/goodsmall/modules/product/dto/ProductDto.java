@@ -1,5 +1,6 @@
 package com.goodsmall.modules.product.dto;
 
+import com.goodsmall.modules.product.domain.Product;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -13,11 +14,11 @@ public class ProductDto {
     private LocalDateTime openDate;
     private String status;
 
-    public ProductDto(String productName, String description, BigDecimal productPrice, LocalDateTime openDate, String status) {
-        this.productName = productName;
-        this.description = description;
-        this.productPrice = productPrice;
-        this.openDate = openDate;
-        this.status = status;
+    public ProductDto(Product product) {
+        this.productName = product.getProductName();
+        this.description = product.getDescription();
+        this.productPrice = product.getProductPrice();
+        this.openDate = product.getOpenDate();
+        this.status = product.getStatus();
     }
 }
