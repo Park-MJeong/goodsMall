@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -36,14 +35,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
-        String token = authorizationHeader.split(" ")[1].trim();
+
         //Authorization 헤더 검증
-        if (!authorizationHeader.startsWith("Bearer ")) {
-            System.out.println("token null");
-            //조건이 해당되면 메소드 종료 (필수)
+        if (authorizationHeader==null|| !authorizationHeader.startsWith("Bearer ")) {
+            //조건이 해당되면 메소드 종료 ()
+            filterChain.doFilter(request, response);
             return;
         }
+
+        String token = authorizationHeader.split(" ")[1].trim();
+
         if (!jwtUtil.isValidToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답
+            response.getWriter().write("Token Expired");
             log.error("Token Error");
             return;
         }
@@ -55,7 +59,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             log.error(e.getMessage());
             return;
         }
-        System.out.println(token);
         filterChain.doFilter(request, response);
     }
 
