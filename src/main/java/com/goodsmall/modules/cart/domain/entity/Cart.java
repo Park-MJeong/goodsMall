@@ -17,12 +17,16 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @OneToOne (fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true) // 장바구니는 하나의 회원에만 속함
-    @JsonIgnore
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @OneToMany(mappedBy = "cart")
     private List<CartProducts> cartProducts;
+
+    public Cart() {}
+
+    public Cart(Long userId) {
+        this.userId = userId;
+    }
 
 }

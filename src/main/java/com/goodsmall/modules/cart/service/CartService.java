@@ -15,41 +15,51 @@ import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+@Slf4j(topic = "장바구니 서비스")
 @Service
 @AllArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
     private final CartProductRepository cartProductRepository;
     private final ProductRepository productRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 장바구니 내 상품리스트 조회 ,dto에 담아서 전달
      * */
-    public ApiResponse<?> getCart(Long cartId) {
-        Cart cartList = getCartById(cartId);
+    public ApiResponse<?> getCart(Long userId) {
+        Cart cartList = getCartById(userId);
         CartListDto listDto = new CartListDto(cartList);
         return ApiResponse.success(listDto);
     }
+
     /**
      * 장바구니 내 상품 추가
      * */
-
     @Transactional
-    public ApiResponse<?> updateCart(Long cartId, CartProductAddRequestDto dto){
-        Cart cart=getCartById(cartId);
-        Product product =getProduct(dto.getProductId());
+    public ApiResponse<?> updateCart(Long userId, CartProductAddRequestDto dto){
+//        1. 해당 유저 장바구니 조회,없으면 생성
+        Cart cart = getCartById(userId);
 
+//        2. 해당 물건이 장바구니에 있으면 중복저장 방지
+        Product product =getProduct(dto.getProductId());
         if(isProductAlreadyInCart(cart,product)){
-            System.out.println();
             throw new BusinessException(ErrorCode.CART_PRODUCT_ALREADY);
         }
-
+//        3.장바구니 제품테이블에 값 저장
         CartProducts cartProducts = new CartProducts(cart,product,dto.getQuantity());
         cartProductRepository.save(cartProducts);
+
+        /**
+         * 4. 레디스에 정보 업데이트
+         * 추후 장바구니 제품 조회시간 비교하며 로직 진행
+         * */
+//        saveCartToRedis(userId,cart);
+
         CartProductDto cartProductDto = new CartProductDto(cartProducts);
         return ApiResponse.success(cartProductDto);
     }
@@ -115,12 +125,20 @@ public class CartService {
     }
 
     /**
-     * 장바구니 내 상품리스트 조회
+     * 장바구니 조회
+     * 생성되지 않았으면 생성
      * */
-    private Cart getCartById(Long cartId){
-        log.info("getCartById:{}",cartRepository.getCart(cartId));
-        return cartRepository.getCart(cartId);
+    @Transactional
+    public Cart getCartById(Long userId){
+        Cart cart = cartRepository.getCartByUserId(userId);
+        if(cart ==null){
+            cart = new Cart(userId);
+            cartRepository.save(cart);
+            System.out.println("저장완료");
+        }
+        return cart;
     }
+
     /**
      * 장바구니 상품 테이블의 정보 (개별 상품)
      * */
