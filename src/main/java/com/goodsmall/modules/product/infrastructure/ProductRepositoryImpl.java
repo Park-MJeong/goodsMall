@@ -19,23 +19,15 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final JpaProductRepository jpaProductRepository;
 
     @Override
-    public Optional<Product> findById(Long id) {
-        return jpaProductRepository.findById(id);
+    public Optional<Product> findProductById(Long id) {
+        return jpaProductRepository.findProductById(id);
     }
 
     @Override
-    public List<SliceProductDto> getProductList(String search, Long cursor, Pageable pageable) {
+    public List<Product> getProductList(String search, Long cursor, Pageable pageable) {
         return jpaProductRepository.findOrderByOpenDateDesc(search, cursor, pageable);
     }
 
-    @Override
-    public Optional<ProductDto> getProductInformation(Long id) {
-        return jpaProductRepository.dtoFindById(id);
-    }
-    @Override
-    public Optional<Product> getProductAll(Long id) {
-        return jpaProductRepository.findById(id);
-    }
     @Override
     public Optional<Product> getProduct(Long id) {
         return jpaProductRepository.findProduct(id);

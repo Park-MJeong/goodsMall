@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +29,11 @@ public class ProductService {
     //전체 상품 조회
     public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
-        List<SliceProductDto> showProducts = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
-        Slice<SliceProductDto> showList = SliceUtil.getSlice(showProducts,size);
+        List<Product> products = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
+        List<SliceProductDto> productDtos = products.stream().map(product ->
+                        new SliceProductDto(product.getId(), product.getProductName(),product.getProductPrice(), product.getOpenDate(),product.getStatus()))
+                .collect(Collectors.toList());
+        Slice<SliceProductDto> showList = SliceUtil.getSlice(productDtos,size);
         if (showList.getNumberOfElements() == 0) {
             List<SliceProductDto> emptyMessageList = List.of(
                     new SliceProductDto("더 이상 상품이 존재하지 않습니다.")
@@ -41,8 +45,8 @@ public class ProductService {
     }
 
     public ProductDto getProduct(Long id){
-        return repository.getProductInformation(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = repository.getProduct(id).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        return new ProductDto(product);
 
     }
 
