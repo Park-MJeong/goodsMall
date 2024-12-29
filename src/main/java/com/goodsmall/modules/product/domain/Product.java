@@ -39,13 +39,5 @@ public class Product {
     @Column(name="status")
     private String status;
 
-//    @Version // 버전 필드 추가
-//    private Integer version;
-
-
-//    public void setStatus(String status) {
-//        this.status = status;
-//    }
-
 
 }

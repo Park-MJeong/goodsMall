@@ -17,6 +17,12 @@ import java.util.Optional;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final JpaProductRepository jpaProductRepository;
+
+    @Override
+    public Optional<Product> findById(Long id) {
+        return jpaProductRepository.findById(id);
+    }
+
     @Override
     public List<SliceProductDto> getProductList(String search, Long cursor, Pageable pageable) {
         return jpaProductRepository.findOrderByOpenDateDesc(search, cursor, pageable);
@@ -34,6 +40,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     public Optional<Product> getProduct(Long id) {
         return jpaProductRepository.findProduct(id);
     }
+
 
     @Override
     public void save(Product product) {
