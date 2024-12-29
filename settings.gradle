@@ -1,0 +1,9 @@
+rootProject.name = 'goodsMall'
+
+include'common'
+include'eureka-server'
+include'gateway-service'
+include'user-service'
+include'product-service'
+include'order-service'
+include'cart-service'
