@@ -2,7 +2,7 @@ package com.goodsmall.modules.cart.controller;
 
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.security.CustomUserDetails;
-import com.goodsmall.modules.cart.dto.CartProductAddRequestDto;
+import com.goodsmall.modules.cart.dto.CartProductInfo;
 import com.goodsmall.modules.cart.dto.CartProductUpdateRequestDto;
 import com.goodsmall.modules.cart.service.CartService;
 import jakarta.validation.Valid;
@@ -37,7 +37,7 @@ public class CartController {
      * @return 장바구니에 추가된 상품 정보
      */
     @PostMapping("/")
-    public ResponseEntity<ApiResponse<?>> updateCart(@RequestBody @Valid CartProductAddRequestDto dto,@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<ApiResponse<?>> updateCart(@RequestBody @Valid CartProductInfo dto, @AuthenticationPrincipal CustomUserDetails userDetails){
         ApiResponse<?> response = cartService.updateCart(userDetails.getId(),dto);
         return ResponseEntity.ok(response);
     }

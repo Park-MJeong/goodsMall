@@ -4,7 +4,6 @@ import com.goodsmall.modules.cart.domain.entity.Cart;
 
 
 public interface CartRepository {
-    Cart getCart(Long cartId);
 
     void save(Cart cart);
 

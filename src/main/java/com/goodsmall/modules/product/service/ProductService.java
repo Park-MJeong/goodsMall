@@ -44,10 +44,13 @@ public class ProductService {
         return showList;
     }
 
-    public ProductDto getProduct(Long id){
-        Product product = repository.getProduct(id).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        return new ProductDto(product);
+    public Product getProduct(Long id){
+        return repository.getProduct(id).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_SOLD_OUT));
 
+    }
+    public ProductDto getProductDto(Long id) {
+        Product product = getProduct(id);
+        return new ProductDto(product);
     }
 
 //    public void productCheckAndUpdate(CreateOrderRequestDto dto){
@@ -60,10 +63,8 @@ public class ProductService {
 
 //    제품구매시 재고감소
     @Transactional
-    public void decreaseQuantity(OrderRequestDto dto){
-        int quantity = dto.getQuantity();
-        Product product = repository.getProduct(dto.getProductId()).orElseThrow(
-                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    public void decreaseQuantity(Integer quantity, Long productId){
+        Product product = getProduct(productId);
         if(product.getQuantity()<quantity){
             throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
         }

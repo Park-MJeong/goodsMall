@@ -3,6 +3,8 @@ package com.goodsmall.modules.order.service;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
+import com.goodsmall.modules.cart.dto.CartProductInfo;
+import com.goodsmall.modules.cart.service.CartService;
 import com.goodsmall.modules.order.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderProductRepository;
 import com.goodsmall.modules.order.domain.OrderRepository;
@@ -17,6 +19,7 @@ import com.goodsmall.modules.product.domain.ProductRepository;
 import com.goodsmall.modules.product.service.ProductService;
 import com.goodsmall.modules.user.domain.User;
 import com.goodsmall.modules.user.domain.UserRepository;
+import com.goodsmall.modules.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,17 +37,17 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderProductRepository opRepository;
-    private final UserRepository userRepository;
     private final ProductService productService;
-    private final ProductRepository productRepository;
+    private final CartService cartService;
+    private final UserService userService;
 
 
-    public OrderService(OrderRepository orderRepository, OrderProductRepository opRepository, UserRepository userRepository, ProductService productService, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, OrderProductRepository opRepository, ProductService productService, CartService cartService, UserService userService) {
         this.orderRepository = orderRepository;
         this.opRepository = opRepository;
         this.productService = productService;
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
+        this.cartService = cartService;
+        this.userService = userService;
     }
 
     //주문 내역 리스트
@@ -52,7 +55,7 @@ public class OrderService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Order> orderList = orderRepository.getOrderList(userId,pageable);
         if(orderList.getTotalElements()==0){
-            return ApiResponse.success("아직 주문내역이 존재하지 않습니다ㅜㅜ");
+            return ApiResponse.success("아직 주문내역이 존재하지 않습니다.");
         }
 
         List<OrderListDto> listDto = orderList.getContent().stream()
@@ -74,74 +77,53 @@ public class OrderService {
     //상품 단건 구매
     @Transactional
     public ApiResponse<?> createOrder(Long userId,OrderRequestDto dto){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        Order order = new Order(user);
-        //1.주문 상태 생성
-        orderRepository.save(order);
-
-        Product product = productRepository.getProduct(dto.getProductId()).orElseThrow(
-                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-
-//        2. 제품 재고 확인 및 차감
         BigDecimal totalPrice =BigDecimal.ZERO;
-        OrderProducts orderProduct = new OrderProducts(order,product,dto.getQuantity());
 
-        productService.decreaseQuantity(dto);
-        opRepository.save(orderProduct);
-        totalPrice = totalPrice.add(product.getProductPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
+        User user=findUser(userId);
+        //1.주문 상태 생성
+        Order order =initializeOrder(user);
+
+//        2. 주문 처리
+        OrderProducts orderProduct = processOrderProduct(order,dto.getProductId(),dto.getQuantity());
+
+
+        totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
 
         // 3. 주문의 총 가격 업데이트
-        order.setTotalPrice(totalPrice);
-        order.setStatus(OrderStatus.COMPLETE); // 상태 변경
-        order.setUpdatedAt(LocalDateTime.now());
+        finalizeOrder(order,totalPrice);
+
         OrderListDto listDto = new OrderListDto(orderProduct);
-        orderRepository.save(order);
         return ApiResponse.success(listDto);
 
     }
 
+//    장바구니상품 다건 구매
     @Transactional
     public ApiResponse<?> createCartOrder(Long userId, OrderListRequestDto dto){
         BigDecimal totalPrice =BigDecimal.ZERO;
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = findUser(userId);
         //1.주문 상태 생성
-        Order order = new Order(user);
+        Order order =initializeOrder(user);
 
-        orderRepository.save(order);
-        for(OrderRequestDto products : dto.getProductList()){ //상품리스트안에서 각각 상품의 재고먼저확인
-            Product product_information = productRepository.getProduct(products.getProductId()).orElseThrow(
-                    () -> new BusinessException(ErrorCode.PRODUCT_SOLD_OUT));
-            if (product_information.getQuantity() < products.getQuantity()) {
-                throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
-            }
-            /**
-             * 단건구매와 다시 로직이 같아지는데 어떻게 해야할지.........................
-             * 값이 무조건누락될꺼같은데 처리로직에 대해서 도움을 요청합니다.*/
-            OrderProducts orderProduct = new OrderProducts();
-            orderProduct.setOrder(order);
-            orderProduct.setProduct(product_information);
-            orderProduct.setQuantity(products.getQuantity());
-            orderProduct.setPrice(product_information.getProductPrice());
+
+        for(Long cartProductId : dto.getCartProductList()){
+            CartProductInfo requestDto = getCartProductInfo(cartProductId);
+            OrderProducts orderProduct = processOrderProduct(order,requestDto.getProductId(),requestDto.getQuantity());
+
             log.info("orderProduct : {}", orderProduct.getProduct());
 
-
-//            OrderProducts orderProduct = new OrderProducts(order,product_information,products);
-
-            productService.decreaseQuantity(products);
-            opRepository.save(orderProduct);
-            log.info("saved order : {}", orderProduct.getProduct());
-            totalPrice = totalPrice.add(product_information.getProductPrice().multiply(BigDecimal.valueOf(products.getQuantity())));
+            totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(requestDto.getQuantity())));
 
         }
 
-        // 3. 주문의 총 가격 업데이트
-        order.setTotalPrice(totalPrice);
-        order.setStatus(OrderStatus.COMPLETE); // 상태 변경
-        order.setUpdatedAt(LocalDateTime.now());
-        orderRepository.save(order);
+        // 3. 주문정보 저장
+        finalizeOrder(order,totalPrice);
+
+//        4. 주문한 장바구니 상품 삭제
+        List<Long> cartProductId =dto.getCartProductList();
+        cartService.deleteCartProductList(cartProductId);
+
         List<OrderProducts> orderProductList = opRepository.findByOrder(order);
         log.info("orderProductList : {}", orderProductList.size());
         List<OrderProductDto> orderProductDtoList = orderProductList.stream().map(OrderProductDto::new).toList();
@@ -150,7 +132,10 @@ public class OrderService {
 
     }
 
-//    주문 취소 ,반품
+
+    /**
+     * 주문 취소 또는 반품시 상태변경
+     */
     public ApiResponse<?> cancelOrder(Long orderId){
         Order order =orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         if(order.getStatus()!=OrderStatus.COMPLETE && order.getStatus()!=OrderStatus.RETURN_COMPLETE){
@@ -168,6 +153,57 @@ public class OrderService {
         return ApiResponse.success(order.getStatus()+"처리 되었습니다.");
     }
 
+    /**
+     * CartProductInfo 추출 및 데이터 반환
+     */
+    private CartProductInfo getCartProductInfo(Long cartProductId) {
+        return cartService.getCartProductInformation(cartProductId);
+    }
+    /**
+     * 유저정보 확인
+     */
+    private User findUser(Long userId){
+        return userService.findUser(userId);
+    }
+    /**
+     * 제품정보 확인
+     */
+    private Product getProduct(Long productId){
+        return productService.getProduct(productId);
+    }
+    /**
+     *  주문정보 생성
+     */
+    private Order initializeOrder(User user) {
+        Order order = new Order(user);
+        orderRepository.save(order);
+        return order;
+    }
+    /**
+     *  주문처리
+     */
+    private OrderProducts processOrderProduct(Order order,Long productId,Integer quantity){
+        Product product_information = getProduct(productId);
+        if(product_information.getQuantity()<quantity){
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+        }
+//        주문상품 테이블
+        OrderProducts orderProducts = new OrderProducts(order,product_information,quantity);
+
+        productService.decreaseQuantity(quantity,productId); //재고감소
+        opRepository.save(orderProducts);
+
+        return orderProducts;
+    }
+    /**
+     *  주문정보 저장
+     */
+    private void finalizeOrder(Order order,BigDecimal totalPrice) {
+        order.setTotalPrice(totalPrice);
+        order.setStatus(OrderStatus.COMPLETE);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+    }
 
 
 }
