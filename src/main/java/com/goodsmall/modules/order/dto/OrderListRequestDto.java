@@ -8,6 +8,6 @@ import java.util.List;
 @Getter
 @Setter
 public class OrderListRequestDto {
-    private List<OrderRequestDto> productList;
+    private List<Long> cartProductList;
 
 }

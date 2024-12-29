@@ -10,10 +10,7 @@ import org.springframework.stereotype.Repository;
 public class CartRepositoryImpl implements CartRepository {
     private final JpaCartsRepository repository;
 
-    @Override
-    public Cart getCart(Long userId) {
-        return repository.findCartWithProducts(userId);
-    }
+
 
     @Override
     public void save(Cart cart) {

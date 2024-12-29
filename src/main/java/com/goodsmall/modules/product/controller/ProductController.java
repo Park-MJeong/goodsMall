@@ -33,8 +33,7 @@ public class ProductController {
     /*상품상세정보*/
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDto>getProduct(@PathVariable Long productId ){
-        ProductDto productDto = productService.getProduct(productId);
-        return ResponseEntity.ok(productDto);
+        return ResponseEntity.ok(productService.getProductDto(productId));
        }
 
 }

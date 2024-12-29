@@ -7,10 +7,7 @@ import com.goodsmall.modules.cart.domain.CartProductRepository;
 import com.goodsmall.modules.cart.domain.CartRepository;
 import com.goodsmall.modules.cart.domain.entity.Cart;
 import com.goodsmall.modules.cart.domain.entity.CartProducts;
-import com.goodsmall.modules.cart.dto.CartListDto;
-import com.goodsmall.modules.cart.dto.CartProductAddRequestDto;
-import com.goodsmall.modules.cart.dto.CartProductDto;
-import com.goodsmall.modules.cart.dto.CartProductUpdateRequestDto;
+import com.goodsmall.modules.cart.dto.*;
 import com.goodsmall.modules.product.domain.Product;
 import com.goodsmall.modules.product.domain.ProductRepository;
 import jakarta.persistence.EntityManager;
@@ -19,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j(topic = "장바구니 서비스")
 @Service
@@ -56,10 +55,10 @@ public class CartService {
     }
 
     /**
-     * 장바구니 내 상품 추가
+     * 장바구니  상품 추가
      * */
     @Transactional
-    public ApiResponse<?> updateCart(Long userId, CartProductAddRequestDto dto){
+    public ApiResponse<?> updateCart(Long userId, CartProductInfo dto){
 //        1. 해당 유저 장바구니 조회
         Cart cart = getCartByUserId(userId);
 
@@ -128,7 +127,7 @@ public class CartService {
     }
 
     /**
-     * 장바구니 내 상품 삭제
+     * 장바구니 상품 삭제
      * */
 
     @Transactional
@@ -147,6 +146,14 @@ public class CartService {
         return ApiResponse.success(listDto);
     }
 
+    /**
+     * 주문완료된 상품 삭제
+     * */
+
+    public void deleteCartProductList(List<Long> cartProductId){
+        cartProductId.forEach(cartProductRepository::delete);
+        log.info("장바구니 상품 삭제 완료");
+    }
 
 
     /**
@@ -168,4 +175,14 @@ public class CartService {
     private boolean isProductAlreadyInCart(Cart cart,Product product) {
         return cartProductRepository.isProductAlreadyInCart(cart,product);
     }
+
+    public CartProductInfo getCartProductInformation(Long cartProductId) {
+        return cartProductRepository.getCartProducts(cartProductId)
+                .map(cartProduct -> new CartProductInfo(
+                        cartProduct.getProduct().getId(),
+                        cartProduct.getQuantity()
+                ))
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_PRODUCT_NOT_FOUND));
+    }
+
 }

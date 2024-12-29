@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class OrderListDto {
     private Long id;
     private LocalDateTime orderDate;
+    private int totalQuantity;
     private BigDecimal totalPrice;
     private OrderStatus status;
     private List<OrderProductDto> products;
@@ -24,6 +25,9 @@ public class OrderListDto {
     public OrderListDto(Order order) {
         this.id = order.getId();
         this.orderDate = order.getCreatedAt();
+        this.totalQuantity = order.getOrderProducts().stream()
+                .mapToInt(OrderProducts::getQuantity)
+                .sum();
         this.totalPrice = order.getTotalPrice();
         this.status = order.getStatus();
 
@@ -34,6 +38,7 @@ public class OrderListDto {
     public OrderListDto(OrderProducts orderProducts) {
         this.id = orderProducts.getOrder().getId();
         this.orderDate = orderProducts.getOrder().getCreatedAt();
+        this.totalQuantity = orderProducts.getQuantity();
         this.totalPrice = orderProducts.getOrder().getTotalPrice();
         this.status = orderProducts.getOrder().getStatus();
         this.products =List.of(new OrderProductDto(orderProducts));
@@ -42,6 +47,7 @@ public class OrderListDto {
     public OrderListDto(Order order,List<OrderProductDto> products) {
         this.id = order.getId();
         this.orderDate = order.getCreatedAt();
+        this.totalQuantity =products.stream().mapToInt(OrderProductDto::getQuantity).sum();
         this.totalPrice = order.getTotalPrice();
         this.status = order.getStatus();
         this.products = products;
