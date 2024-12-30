@@ -5,6 +5,7 @@ import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.security.CustomUserDetails;
+import com.goodsmall.common.security.TokenRepository;
 import com.goodsmall.modules.user.dto.LoginUserRequestDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,13 +18,17 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j(topic = "로그인 및 JWT 생성")
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    private final JwtUtil jwtUtil;
+    private final TokenRepository tokenRepository;
+    private final Long EXPIRE_LIMIT = 24*60*60*1000L; // 24시간
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+
+    public JwtAuthenticationFilter(TokenRepository tokenRepository) {
+        this.tokenRepository = tokenRepository;
         setFilterProcessesUrl("/api/users/login");
     }
 
@@ -50,17 +55,37 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         log.info("로그인 성공 및 JWT 생성");
         CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
-//        String username = userDetails.getUsername();
         String email = userDetails.getEmail();
         Long userId = userDetails.getId();
+        String userName = userDetails.getUsername();
 
-        String token = jwtUtil.createAccessToken(userId,email);
-        response.addHeader(JwtUtil.AUTHORIZATION_HEADER,token);
+        String accessToken = JwtTokenProvider.createAccessToken(userId,email);
 
+        String refreshToken;
+        Long refreshExpire = tokenRepository.getRefreshTokenTTL(userId);
+        if(refreshExpire <= EXPIRE_LIMIT || refreshExpire == -2){
+            refreshToken = JwtTokenProvider.generateRefreshToken(userId, userName);
+            long expiredTime = JwtTokenProvider.getExpirationTime(refreshToken);
+            tokenRepository.saveRefreshToken(userId, refreshToken, expiredTime);
+        }else {
+            refreshToken = tokenRepository.getRefreshToken(userId);
+        }
+
+        response.addHeader(JwtTokenProvider.AUTHORIZATION_HEADER,accessToken);
+
+        // 2. 응답 바디 데이터 구성
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+
+        // 3. 응답 설정
         ObjectMapper objectMapper = new ObjectMapper();
+
         response.setContentType("application/json; charset=UTF-8");
-        ApiResponse<?> res = ApiResponse.success(token);
-        response.getOutputStream().write(objectMapper.writeValueAsString(res).getBytes());
+        response.getOutputStream().write(
+                objectMapper.writeValueAsString(ApiResponse.success(tokens)).getBytes()
+        );
+
     }
 
     @Override
@@ -70,11 +95,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     }
 
     private void jwtResponse(HttpServletResponse response, BusinessException e) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
         response.setContentType("application/json; charset=UTF-8");
 
-        ObjectMapper objectMapper = new ObjectMapper();
         ApiResponse<String> res = ApiResponse.createException(e.getCode(),e.getMessage());
-        response.setStatus(e.getCode()); //응답헤더 설정
+        response.setStatus(e.getCode()); //응답헤더 코드설정
         response.getOutputStream().write(objectMapper.writeValueAsString(res).getBytes());
     }
 }

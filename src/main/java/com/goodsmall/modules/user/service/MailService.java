@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class MailService {
 
     private final JavaMailSender mailSender;
-    private final RedisService redisService;
     @Value("${spring.mail.username}")
     private String sender;
 

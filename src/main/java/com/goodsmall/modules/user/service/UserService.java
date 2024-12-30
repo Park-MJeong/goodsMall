@@ -3,7 +3,6 @@ package com.goodsmall.modules.user.service;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
-import com.goodsmall.common.security.jwt.JwtUtil;
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.common.util.RandomCodeUtil;
 import com.goodsmall.modules.user.domain.User;
@@ -18,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -30,8 +28,8 @@ public class UserService {
     private final RandomCodeUtil randomCodeUtil;
     private final EncryptionUtil encryptionUtil;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final JwtUtil jwtUtil;
 
+//    private final Long EXPIRE_LIMIT = 24*60*60*1000L; // 24시간
     private String encryptData(String data) {
         return encryptionUtil.encrypt(data);
     }
@@ -101,10 +99,10 @@ public class UserService {
     }
 
 
-    /**
-     *  로그인
-     */
-    public ApiResponse<?> login(UserRequestDto requestDto) {
+//    /**
+//     *  로그인
+//     */
+//    public ApiResponse<?> login(LoginUserRequestDto requestDto, HttpServletResponse response) {
 //        String userEmail = encryptionUtil.encrypt(requestDto.getEmail());
 //
 ////        1. 입력받은 유저의 정보가 있는지 확인
@@ -112,14 +110,45 @@ public class UserService {
 //        if (loginUser.isEmpty()) {
 //            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
 //        }
+//        Long userId = loginUser.get().getId();
+//
 ////        2. 비밀번호 일치여부 확인
 //        if (!bCryptPasswordEncoder.matches(requestDto.getPassword(), loginUser.get().getPassword())) {
 //            throw new BusinessException(ErrorCode.LOGIN_FAILED);
 //        }
-//        String accessToken = jwtUtil.createAccessToken(loginUser.get().getId(), loginUser.get().getUserName());
-        return null;
-
-    }
+////        3. 토큰 발급
+//        String accessToken = JwtTokenProvider.createAccessToken(userId, userEmail);
+//        String refreshToken;
+//
+//        // refresh 토큰의 유효시간이 24시간 미만이면 재발급
+//        if(redisService.getRefreshTokenTTL(userId)<=EXPIRE_LIMIT || redisService.getRefreshTokenTTL(userId) == -2) {
+//            refreshToken = JwtTokenProvider.generateRefreshToken(userId, loginUser.get().getUserName());
+//            Long expiredTime = JwtTokenProvider.getExpirationTime(refreshToken);
+//
+////        레디스에 refreshToken 저장
+//            redisService.saveRefreshToken(userId,refreshToken,expiredTime);
+//        }else {
+//            refreshToken = redisService.getRefreshToken(userId);
+//        }
+////        헤더에 accessToken 저장
+//        response.addHeader(JwtTokenProvider.AUTHORIZATION_HEADER,accessToken);
+//
+//        // 5. 응답 데이터
+//        Map<String, String> tokens = new HashMap<>();
+//        tokens.put("accessToken", accessToken);
+//        tokens.put("refreshToken", refreshToken);
+//        return ApiResponse.success(tokens);
+//
+//    }
+//
+//    public ApiResponse<?> logout(String accessToken,Long userId) {
+//        long expiredTime = JwtTokenProvider.getExpirationTime(accessToken);
+//        if(expiredTime>0){
+//            redisService.saveBlacklistToken(accessToken,expiredTime);
+//        }
+//        redisService.deleteRefreshToken(userId);
+//        return ApiResponse.success("로그아웃 성공");
+//    }
 
 
 

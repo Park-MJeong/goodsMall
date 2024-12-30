@@ -1,6 +1,7 @@
 package com.goodsmall.common.security.jwt;
 
 import com.goodsmall.common.security.CustomUserDetailsService;
+import com.goodsmall.common.security.TokenRepository;
 import com.goodsmall.common.util.EncryptionUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,19 +14,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Slf4j(topic = "JWT 검증 및 인가")
 @RequiredArgsConstructor
-@Component
 public class JwtTokenFilter extends OncePerRequestFilter {
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenRepository tokenRepository;
     private final CustomUserDetailsService userDetailsService;
     private final EncryptionUtil encryptionUtil;
 
@@ -38,20 +38,26 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         //Authorization 헤더 검증
         if (authorizationHeader==null|| !authorizationHeader.startsWith("Bearer ")) {
-            //조건이 해당되면 메소드 종료 ()
             filterChain.doFilter(request, response);
             return;
         }
+        String token = JwtTokenProvider.getHeaderToToken(authorizationHeader);
+        System.out.println(authorizationHeader);
 
-        String token = authorizationHeader.split(" ")[1].trim();
-
-        if (!jwtUtil.isValidToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답
-            response.getWriter().write("Token Expired");
-            log.error("Token Error");
+        if(tokenRepository.isBlacklisted(authorizationHeader)){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token is blacklisted");
+            log.error("블랙리스트에 등록된 토큰입니다.");
             return;
         }
-        String userEmail = jwtUtil.getClaimsToUserEmail(token);
+
+        if (!jwtTokenProvider.isValidToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답
+            response.getWriter().write("Token Expired");
+            log.error("Token 만료");
+            return;
+        }
+        String userEmail = JwtTokenProvider.getClaimsToUserEmail(token);
 
         try {
             setAuthentication(userEmail);
