@@ -1,5 +1,6 @@
 package com.goodsmall.modules.product.dto;
 
+import com.goodsmall.modules.product.domain.Product;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -27,5 +28,15 @@ public class SliceProductDto {
 
     public SliceProductDto(String message) {
         this.message = message;
+    }
+
+    public static SliceProductDto fromProductDto(Product product) {
+        return new SliceProductDto(
+                product.getId(),
+                product.getProductName(),
+                product.getProductPrice(),
+                product.getOpenDate(),
+                product.getStatus()
+        );
     }
 }

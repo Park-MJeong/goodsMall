@@ -38,7 +38,7 @@ public enum ErrorCode {
     CART_NOT_QUANTITY(HttpStatus.NOT_FOUND,"해당 장바구니에는 상품이 없습니다."),
 
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 상품을 찾을 수 없습니다."),
-    PRODUCT_SOLD_OUT(HttpStatus.BAD_GATEWAY,"품절상품이 포함되어있습니다."),
+    PRODUCT_SOLD_OUT(HttpStatus.BAD_REQUEST,"품절상품이 포함되어있습니다."),
 
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."),
     ORDER_CANCELLED_FAILED(HttpStatus.BAD_REQUEST,"주문취소 불가능한 상태입니다.");

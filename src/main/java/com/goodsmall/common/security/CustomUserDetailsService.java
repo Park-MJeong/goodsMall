@@ -19,7 +19,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         String userEmail =encryptionUtil.encrypt(email);
-        System.out.println(userEmail);
         return repository.findByEmail(userEmail)
                 .map(user -> CustomUserDetails.builder()
                         .id(user.getId())

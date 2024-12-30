@@ -12,14 +12,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
-@Slf4j(topic = "JwtUtil")
+@Slf4j(topic = "JwtTokenProvider")
 @Component
-public class JwtUtil {
+public class JwtTokenProvider {
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
     private static SecretKey secretKey;
 
-    public JwtUtil(@Value("${spring.jwt.secret.key}") String jwtSecretKey) {
+    public JwtTokenProvider(@Value("${spring.jwt.secret.key}") String jwtSecretKey) {
         secretKey = Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -41,9 +41,9 @@ public class JwtUtil {
      * Access토큰생성
      *
      */
-   public String createAccessToken(Long userId,String email) {
+   public static String createAccessToken(Long userId, String email) {
         Claims claims = Jwts.claims();
-        claims.put("userId :" , userId);
+        claims.put("userId", userId);
         claims.put("email", email);
         claims.put("type","ACCESS");
         return BEARER_PREFIX+
@@ -56,7 +56,7 @@ public class JwtUtil {
     }
 
     /**
-     * Refresh Token : 기간을 14일로 지정합니다.
+     * Refresh Token : 기간을 7일로 지정합니다.
      */
     private static Date createRefreshTokenExpiredDate() {
         Calendar c = Calendar.getInstance();
@@ -123,13 +123,18 @@ public class JwtUtil {
         return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
     }
 //    Cliam 내의 유저 아이디
-    public String getClaimsToUserId(String token) {
-        return  getTokenToClaims(token).get("userId", String.class);
+    public static Long getClaimsToUserId(String token) {
+        return  getTokenToClaims(token).get("userId", Long.class);
     }
-    //    Cliam 내의 유저 이름
-    public String getClaimsToUserEmail(String token) {
+    //    Cliam 내의 유저 이메일
+    public static String getClaimsToUserEmail(String token) {
         return  getTokenToClaims(token).get("email", String.class);
     }
+
+    public String getClaimsToTokenType(String token) {
+        return  getTokenToClaims(token).get("type", String.class);
+    }
+
 
     /**
      * Header 내에 토큰을 추출합니다.
@@ -137,9 +142,28 @@ public class JwtUtil {
      * @param header 헤더
      * @return String
      */
-    public static String getTokenFromHeader(String header) {
+    public static String getHeaderToToken(String header) {
         return header.split(" ")[1];
     }
+
+//     토큰 유효시간
+    public static long getExpirationTime(String refreshToken) {
+        // Bearer 접두사 제거
+        String token = refreshToken.replace(BEARER_PREFIX, "");
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date expiration = claims.getExpiration();
+        Date now = new Date();
+
+        // 만료시간 - 현재시간 = 남은시간 (밀리초 단위)
+        return expiration.getTime() - now.getTime();
+    }
+
 
 }
 

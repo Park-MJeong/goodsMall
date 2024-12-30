@@ -1,10 +1,14 @@
 package com.goodsmall.common.config;
 
 import com.goodsmall.common.security.CustomUserDetailsService;
+import com.goodsmall.common.security.Token.CustomLogoutHandler;
+import com.goodsmall.common.security.TokenRepository;
 import com.goodsmall.common.security.jwt.JwtTokenFilter;
-import com.goodsmall.common.security.jwt.JwtUtil;
+import com.goodsmall.common.security.jwt.JwtTokenProvider;
 import com.goodsmall.common.security.jwt.JwtAuthenticationFilter;
 import com.goodsmall.common.util.EncryptionUtil;
+import com.goodsmall.modules.user.service.RedisService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,16 +26,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig {
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
     private final EncryptionUtil encryptionUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final CustomUserDetailsService customUserDetailsService;
+    private final CustomLogoutHandler customLogoutHandler;
+    private final TokenRepository tokenRepository;
 
-    public WebSecurityConfig(JwtUtil jwtUtil, EncryptionUtil encryptionUtil, AuthenticationConfiguration authenticationConfiguration, CustomUserDetailsService customUserDetailsService) {
-        this.jwtUtil = jwtUtil;
+    public WebSecurityConfig(JwtTokenProvider jwtTokenProvider, EncryptionUtil encryptionUtil, AuthenticationConfiguration authenticationConfiguration, CustomUserDetailsService customUserDetailsService, RedisService redisService, CustomLogoutHandler customLogoutHandler, TokenRepository tokenRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
         this.encryptionUtil = encryptionUtil;
         this.authenticationConfiguration = authenticationConfiguration;
         this.customUserDetailsService = customUserDetailsService;
+        this.tokenRepository = tokenRepository;
+        this.customLogoutHandler = customLogoutHandler;
     }
 
 
@@ -47,13 +55,13 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenRepository);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
     }
     @Bean
     public JwtTokenFilter jwtTokenFilter() {
-        return new JwtTokenFilter(jwtUtil, customUserDetailsService,encryptionUtil);
+        return new JwtTokenFilter(jwtTokenProvider,tokenRepository,customUserDetailsService,encryptionUtil);
     }
 
     @Bean
@@ -64,17 +72,31 @@ public class WebSecurityConfig {
 
 //        JWT토큰 사용 => 세션 사용 x
         http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+//        URL별 접근 권한 설정
         http.authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
                         .anyRequest().authenticated() //로그인한 사용자만 접근가능
         );
+        // 로그아웃 설정
+        http.logout(logout -> logout
+                .logoutUrl("/api/users/logout") // 로그아웃 엔드포인트 설정
+                .addLogoutHandler(customLogoutHandler)
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setContentType("text/plain;charset=UTF-8");
+                    response.setCharacterEncoding("UTF-8");
+
+                    // 로그아웃 성공 응답
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.getWriter().write("로그아웃 성공");
+                })
+        );
 
 
 //         필터 관리
 //        addFilterBefore(a,b) b필터 전에 a필터를 먼저 수행(b 전에 a 를 위치하게 함)
+        http.addFilterBefore(jwtTokenFilter(), JwtAuthenticationFilter.class); //JWT검증 필터
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); //로그인필터
-        http.addFilterAfter(jwtTokenFilter(), JwtAuthenticationFilter.class); //JWT검증 필터
 
         return http.build();
     }
