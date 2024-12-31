@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goodsmall.common.api.ApiResponse;
 import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
-import com.goodsmall.common.security.CustomUserDetails;
-import com.goodsmall.common.security.TokenRepository;
 import com.goodsmall.modules.user.dto.LoginUserRequestDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -54,6 +52,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         log.info("로그인 성공 및 JWT 생성");
+//        String deviceId = request.getHeader("Device-Id");
+
         CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
         String email = userDetails.getEmail();
         Long userId = userDetails.getId();
@@ -64,9 +64,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String refreshToken;
         Long refreshExpire = tokenRepository.getRefreshTokenTTL(userId);
         if(refreshExpire <= EXPIRE_LIMIT || refreshExpire == -2){
-            refreshToken = JwtTokenProvider.generateRefreshToken(userId, userName);
+            refreshToken = JwtTokenProvider.generateRefreshToken(userId,userName);
             long expiredTime = JwtTokenProvider.getExpirationTime(refreshToken);
-            tokenRepository.saveRefreshToken(userId, refreshToken, expiredTime);
+            tokenRepository.saveRefreshToken(userId,refreshToken, expiredTime);
         }else {
             refreshToken = tokenRepository.getRefreshToken(userId);
         }

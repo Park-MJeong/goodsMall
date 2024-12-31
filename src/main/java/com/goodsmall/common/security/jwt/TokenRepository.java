@@ -1,4 +1,4 @@
-package com.goodsmall.common.security;
+package com.goodsmall.common.security.jwt;
 
 public interface TokenRepository {
     void saveRefreshToken(Long userId,String token, long expirationTime);

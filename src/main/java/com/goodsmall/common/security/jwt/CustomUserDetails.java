@@ -1,4 +1,4 @@
-package com.goodsmall.common.security;
+package com.goodsmall.common.security.jwt;
 
 import com.goodsmall.modules.user.domain.User;
 import lombok.Builder;

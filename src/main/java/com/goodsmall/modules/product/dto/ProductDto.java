@@ -21,4 +21,5 @@ public class ProductDto {
         this.openDate = product.getOpenDate();
         this.status = product.getStatus();
     }
+
 }

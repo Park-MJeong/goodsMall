@@ -62,12 +62,17 @@ public class CartService {
 //        1. 해당 유저 장바구니 조회
         Cart cart = getCartByUserId(userId);
 
-//        2. 해당 물건이 장바구니에 있으면 중복저장 방지
         Product product =getProduct(dto.getProductId());
+
+//        2. 오픈전 물건 장바구니에 저장 불가
+        if(product.getStatus().equals("Pre-sale")){
+            throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
+        }
+//        3. 해당 물건이 장바구니에 있으면 중복저장 방지
         if(isProductAlreadyInCart(cart,product)){
             throw new BusinessException(ErrorCode.CART_PRODUCT_ALREADY);
         }
-//        3.장바구니 제품테이블에 값 저장
+//        4.장바구니 제품테이블에 값 저장
         CartProducts cartProducts = new CartProducts(cart,product,dto.getQuantity());
         cartProductRepository.save(cartProducts);
 

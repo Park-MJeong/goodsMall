@@ -1,16 +1,13 @@
 package com.goodsmall.modules.user.controller;
 
 import com.goodsmall.common.api.ApiResponse;
-import com.goodsmall.common.security.CustomUserDetails;
-import com.goodsmall.modules.user.dto.LoginUserRequestDto;
+import com.goodsmall.common.security.jwt.CustomUserDetails;
+import com.goodsmall.modules.user.dto.*;
 import com.goodsmall.modules.user.service.UserService;
-import com.goodsmall.modules.user.dto.EmailRequestDto;
-import com.goodsmall.modules.user.dto.UserRequestDto;
-import com.goodsmall.modules.user.dto.VerifyDto;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -38,6 +35,12 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<?>>signup(@Valid @RequestBody UserRequestDto userRequestDto) {
         ApiResponse<?> response = userService.signup(userRequestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<ApiResponse<?>>changePassword(@Valid@RequestBody PasswordChangeRequestDto requestDto, @AuthenticationPrincipal CustomUserDetails userDetails){
+        ApiResponse<?> response =  userService.changePassword(userDetails.getId(),requestDto);;
         return ResponseEntity.ok(response);
     }
 

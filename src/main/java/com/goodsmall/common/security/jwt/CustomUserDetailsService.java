@@ -1,4 +1,4 @@
-package com.goodsmall.common.security;
+package com.goodsmall.common.security.jwt;
 
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.modules.user.domain.UserRepository;

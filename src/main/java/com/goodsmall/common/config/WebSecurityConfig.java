@@ -1,8 +1,8 @@
 package com.goodsmall.common.config;
 
-import com.goodsmall.common.security.CustomUserDetailsService;
-import com.goodsmall.common.security.Token.CustomLogoutHandler;
-import com.goodsmall.common.security.TokenRepository;
+import com.goodsmall.common.security.jwt.CustomUserDetailsService;
+import com.goodsmall.common.security.jwt.CustomLogoutHandler;
+import com.goodsmall.common.security.jwt.TokenRepository;
 import com.goodsmall.common.security.jwt.JwtTokenFilter;
 import com.goodsmall.common.security.jwt.JwtTokenProvider;
 import com.goodsmall.common.security.jwt.JwtAuthenticationFilter;

@@ -1,6 +1,6 @@
 package com.goodsmall.modules.order.infrastructure;
 
-import com.goodsmall.modules.order.OrderStatus;
+import com.goodsmall.modules.order.event.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;
 import lombok.RequiredArgsConstructor;

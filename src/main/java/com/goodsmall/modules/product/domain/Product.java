@@ -1,16 +1,16 @@
 package com.goodsmall.modules.product.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.goodsmall.common.constant.ErrorCode;
+import com.goodsmall.common.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "products")
 public class Product {
     @Id
@@ -33,9 +33,28 @@ public class Product {
     @Column(name = "quantity")
     private int quantity;
 
-    @Setter
     @Column(name="status")
     private String status;
 
+//    제품 재고 감소
+    public void decreaseQuantity(int quantity) {
+        if (this.quantity < quantity) {
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+        }
+        this.quantity -= quantity;
+        updateStatus();
+    }
+//    제품 재고 증가
+    public void increaseQuantity(int quantity) {
+        this.quantity += quantity;
+        updateStatus();
+    }
+
+    private void updateStatus(){
+        if(this.quantity==0) this.status ="Sold out";
+        else if(this.quantity > 0 && this.status.equals("Sold Out")) {
+            this.status = "On Sale";
+        }
+    }
 
 }

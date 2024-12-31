@@ -1,6 +1,6 @@
 package com.goodsmall.modules.order.domain.entity;
 
-import com.goodsmall.modules.order.OrderStatus;
+import com.goodsmall.modules.order.event.OrderStatus;
 import com.goodsmall.modules.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;

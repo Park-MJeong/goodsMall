@@ -1,7 +1,5 @@
 package com.goodsmall.common.security.jwt;
 
-import com.goodsmall.common.security.CustomUserDetailsService;
-import com.goodsmall.common.security.TokenRepository;
 import com.goodsmall.common.util.EncryptionUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,7 +1,7 @@
 package com.goodsmall.modules.cart.controller;
 
 import com.goodsmall.common.api.ApiResponse;
-import com.goodsmall.common.security.CustomUserDetails;
+import com.goodsmall.common.security.jwt.CustomUserDetails;
 import com.goodsmall.modules.cart.dto.CartProductInfo;
 import com.goodsmall.modules.cart.dto.CartProductUpdateRequestDto;
 import com.goodsmall.modules.cart.service.CartService;
