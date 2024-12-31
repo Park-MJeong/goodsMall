@@ -1,7 +1,5 @@
 package com.cartservice.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.userservice.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +14,17 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private long userId;
 
-//    @OneToMany(mappedBy = "cart")
-//    private List<CartProducts> cartProducts;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @OneToMany(mappedBy = "cart")
+    private List<CartProducts> cartProducts;
+
+    public Cart() {}
+
+    public Cart(Long userId) {
+        this.userId = userId;
+    }
 
 }
