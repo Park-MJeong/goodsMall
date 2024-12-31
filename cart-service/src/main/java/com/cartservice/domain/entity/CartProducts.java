@@ -1,7 +1,6 @@
 package com.cartservice.domain.entity;
 
-
-import com.productservice.domain.Product;
+import com.goodsmall.modules.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,14 +17,19 @@ public class CartProducts {
     @Column(name="quantity",nullable = false)
     private int quantity;
 
-    private long productId;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
-    private long cartId;
+    @ManyToOne
+    @JoinColumn(name="cart_id")
+    private Cart cart;
+
     public CartProducts() {}
 
-    public CartProducts(long cartId,long productId, int quantity) {
-        this.cartId = cartId;
-        this.productId = productId;
+    public CartProducts(Cart cart, Product product, int quantity) {
+        this.cart = cart;
+        this.product = product;
         this.quantity = quantity;
     }
 }

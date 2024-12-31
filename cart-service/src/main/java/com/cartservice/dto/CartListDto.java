@@ -1,7 +1,7 @@
 package com.cartservice.dto;
 
-import com.cartservice.domain.entity.Cart;
-import com.cartservice.domain.entity.CartProducts;
+import com.goodsmall.modules.cart.domain.entity.Cart;
+import com.goodsmall.modules.cart.domain.entity.CartProducts;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -15,16 +15,16 @@ public class CartListDto {
     private BigDecimal totalPrice;
     private List<CartProductDto> products;
 
-//    public CartListDto(Cart cart) {
-//        this.id = cart.getId();
-//        this.totalQuantity = cart.getCartProducts().stream()
-//                .mapToInt(CartProducts::getQuantity)
-//                .sum();
-//        this.products = cart.getCartProducts().stream()
-//                .map(CartProductDto::new)
-//                .collect(Collectors.toList());
-//        this.totalPrice = cart.getCartProducts().stream()
-//                .map(cp->cp.getProduct().getProductPrice().multiply(BigDecimal.valueOf(cp.getQuantity())))
-//                .reduce(BigDecimal.ZERO, BigDecimal::add);
-//    }
+    public CartListDto(Cart cart) {
+        this.id = cart.getId();
+        this.totalQuantity = cart.getCartProducts().stream()
+                .mapToInt(CartProducts::getQuantity)
+                .sum();
+        this.products = cart.getCartProducts().stream()
+                .map(CartProductDto::new)
+                .collect(Collectors.toList());
+        this.totalPrice = cart.getCartProducts().stream()
+                .map(cp->cp.getProduct().getProductPrice().multiply(BigDecimal.valueOf(cp.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

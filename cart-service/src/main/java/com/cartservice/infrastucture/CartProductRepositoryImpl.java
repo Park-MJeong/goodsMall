@@ -1,10 +1,9 @@
 package com.cartservice.infrastucture;
 
-import com.cartservice.domain.CartProductRepository;
-import com.cartservice.domain.entity.Cart;
-import com.cartservice.domain.entity.CartProducts;
-
-import com.productservice.domain.Product;
+import com.goodsmall.modules.cart.domain.CartProductRepository;
+import com.goodsmall.modules.cart.domain.entity.Cart;
+import com.goodsmall.modules.cart.domain.entity.CartProducts;
+import com.goodsmall.modules.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -29,8 +28,8 @@ public class CartProductRepositoryImpl implements CartProductRepository {
         repository.deleteById(id);
     }
 
-//    @Override
-//    public boolean isProductAlreadyInCart(Cart cart, Product product) {
-//        return repository.existsByCartAndProduct(cart,product);
-//    }
+    @Override
+    public boolean isProductAlreadyInCart(Cart cart, Product product) {
+        return repository.existsByCartAndProduct(cart,product);
+    }
 }
