@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @Table(name="users")
 public class User {
@@ -48,5 +49,10 @@ public class User {
 
     public enum UserRoleEnum {
         USER, ADMIN
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+//        this.updatedAt = LocalDateTime.now();
     }
 }

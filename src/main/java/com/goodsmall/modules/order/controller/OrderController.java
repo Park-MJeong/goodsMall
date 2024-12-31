@@ -1,7 +1,7 @@
 package com.goodsmall.modules.order.controller;
 
 import com.goodsmall.common.api.ApiResponse;
-import com.goodsmall.common.security.CustomUserDetails;
+import com.goodsmall.common.security.jwt.CustomUserDetails;
 import com.goodsmall.modules.order.dto.OrderListRequestDto;
 import com.goodsmall.modules.order.dto.OrderRequestDto;
 import com.goodsmall.modules.order.service.OrderService;

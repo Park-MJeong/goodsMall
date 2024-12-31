@@ -148,8 +148,10 @@ public class JwtTokenProvider {
 
 //     토큰 유효시간
     public static long getExpirationTime(String refreshToken) {
+        System.out.println(refreshToken);
         // Bearer 접두사 제거
         String token = refreshToken.replace(BEARER_PREFIX, "");
+        System.out.println(token);
 
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
@@ -158,6 +160,24 @@ public class JwtTokenProvider {
                 .getBody();
 
         Date expiration = claims.getExpiration();
+        Date now = new Date();
+
+        // 만료시간 - 현재시간 = 남은시간 (밀리초 단위)
+        return expiration.getTime() - now.getTime();
+    }
+    public static long getIssuedTime(String refreshToken) {
+        System.out.println(refreshToken);
+        // Bearer 접두사 제거
+        String token = refreshToken.replace(BEARER_PREFIX, "");
+        System.out.println(token);
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date expiration = claims.getIssuedAt();
         Date now = new Date();
 
         // 만료시간 - 현재시간 = 남은시간 (밀리초 단위)

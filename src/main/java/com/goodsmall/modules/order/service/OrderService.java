@@ -5,7 +5,7 @@ import com.goodsmall.common.constant.ErrorCode;
 import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.modules.cart.dto.CartProductInfo;
 import com.goodsmall.modules.cart.service.CartService;
-import com.goodsmall.modules.order.OrderStatus;
+import com.goodsmall.modules.order.event.OrderStatus;
 import com.goodsmall.modules.order.domain.OrderProductRepository;
 import com.goodsmall.modules.order.domain.OrderRepository;
 import com.goodsmall.modules.order.domain.entity.Order;

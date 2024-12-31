@@ -6,6 +6,7 @@ import com.goodsmall.common.exception.BusinessException;
 import com.goodsmall.common.util.EncryptionUtil;
 import com.goodsmall.common.util.RandomCodeUtil;
 import com.goodsmall.modules.user.domain.User;
+import com.goodsmall.modules.user.dto.PasswordChangeRequestDto;
 import com.goodsmall.modules.user.dto.UserRequestDto;
 import com.goodsmall.modules.user.domain.UserRepository;
 import com.goodsmall.modules.user.dto.EmailRequestDto;
@@ -28,8 +29,9 @@ public class UserService {
     private final RandomCodeUtil randomCodeUtil;
     private final EncryptionUtil encryptionUtil;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-//    private final Long EXPIRE_LIMIT = 24*60*60*1000L; // 24시간
+    //    private final Long EXPIRE_LIMIT = 24*60*60*1000L; // 24시간
     private String encryptData(String data) {
         return encryptionUtil.encrypt(data);
     }
@@ -92,10 +94,27 @@ public class UserService {
 
 //        개인정보 암호화
         User user = new User(createEncryptedUser(requestDto));
-        user.setPassword(bCryptPasswordEncoder.encode(requestDto.getPassword()));
+        user.changePassword(bCryptPasswordEncoder.encode(requestDto.getPassword()));
         userRepository.save(user);
 
         return ApiResponse.success("회원가입이 완료되었습니다."+requestDto.getEmail());
+    }
+
+    public ApiResponse<?> changePassword(Long userId, PasswordChangeRequestDto requestDto) {
+        User user =findUser(userId);
+        if(!passwordEncoder.matches(requestDto.getCurrentPassword(),user.getPassword())){
+            throw new BusinessException(ErrorCode.PASSWORD_CURRENT_ERROR);
+        }
+        if(!requestDto.getNewPassword().equals(requestDto.getConfirmPassword())){
+            throw new BusinessException(ErrorCode.NEW_PASSWORD_ERROR);
+        }
+        if(passwordEncoder.matches(user.getPassword(),requestDto.getConfirmPassword())){
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD_CHANGE);
+        }
+        user.changePassword(requestDto.getConfirmPassword());
+        userRepository.save(user);
+        return ApiResponse.success("비밀번호가 변경되었습니다.");
+
     }
 
 

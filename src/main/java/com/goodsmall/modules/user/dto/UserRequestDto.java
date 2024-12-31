@@ -13,13 +13,13 @@ public class UserRequestDto {
     private String password;
 
     public UserRequestDto() {}
-    public UserRequestDto(String userName, String phoneNumber, String address,
-                          String email, String password) {
-        this.userName = userName;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.email = email;
-        this.password = password;
-    }
+//    public UserRequestDto(String userName, String phoneNumber, String address,
+//                          String email, String password) {
+//        this.userName = userName;
+//        this.phoneNumber = phoneNumber;
+//        this.address = address;
+//        this.email = email;
+//        this.password = password;
+//    }
 
 }

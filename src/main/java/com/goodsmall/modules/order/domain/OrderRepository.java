@@ -1,6 +1,6 @@
 package com.goodsmall.modules.order.domain;
 
-import com.goodsmall.modules.order.OrderStatus;
+import com.goodsmall.modules.order.event.OrderStatus;
 import com.goodsmall.modules.order.domain.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

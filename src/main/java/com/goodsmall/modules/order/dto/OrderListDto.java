@@ -1,6 +1,6 @@
 package com.goodsmall.modules.order.dto;
 
-import com.goodsmall.modules.order.OrderStatus;
+import com.goodsmall.modules.order.event.OrderStatus;
 import com.goodsmall.modules.order.domain.entity.Order;
 import com.goodsmall.modules.order.domain.entity.OrderProducts;
 import lombok.Getter;

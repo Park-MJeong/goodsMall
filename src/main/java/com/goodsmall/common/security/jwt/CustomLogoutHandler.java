@@ -1,8 +1,6 @@
-package com.goodsmall.common.security.Token;
+package com.goodsmall.common.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.goodsmall.common.security.TokenRepository;
-import com.goodsmall.common.security.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +29,7 @@ public class CustomLogoutHandler implements LogoutHandler {
         // [STEP1] 요청 값에서 토큰을 추출합니다.
         String authorizationHeader = request.getHeader("Authorization");
         String token = JwtTokenProvider.getHeaderToToken(authorizationHeader);
+//        String deviceId = request.getHeader("Device-Id");
 
         // [STEP2-1] 토큰이 존재하는 경우
         if (token != null) {

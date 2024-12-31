@@ -1,9 +1,10 @@
-package com.goodsmall.common.security;
+package com.goodsmall.common.security.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Repository
@@ -13,23 +14,30 @@ public class RedisTokenRepository implements TokenRepository {
     private static final String REFRESH = "refresh:";
 
     @Override
-    public void saveRefreshToken(Long userId, String token, long expirationTime) {
-        redisTemplate.opsForValue().set(REFRESH+userId,token,expirationTime, TimeUnit.MILLISECONDS);
+    public void saveRefreshToken(Long userId,String token, long expirationTime) {
+        String key = REFRESH + userId + ":" ;
+        redisTemplate.opsForValue().set(key,token,expirationTime, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public String getRefreshToken(Long userId) {
-        return redisTemplate.opsForValue().get(REFRESH+userId);
+        String key = REFRESH + userId + ":" ;
+
+        return redisTemplate.opsForValue().get(key);
     }
 
     @Override
     public Long getRefreshTokenTTL(Long userId) {
-        return redisTemplate.getExpire(REFRESH+userId,TimeUnit.MILLISECONDS);
+        String key = REFRESH + userId + ":" ;
+
+        return redisTemplate.getExpire(key,TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void deleteRefreshToken(Long userId) {
-        redisTemplate.delete(REFRESH+userId);
+        String key = REFRESH + userId + ":";
+
+        redisTemplate.delete(key);
     }
 
     @Override
@@ -43,5 +51,12 @@ public class RedisTokenRepository implements TokenRepository {
     public boolean isBlacklisted(String token) {
         String key = "blacklist:" + token;
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
+
+    public void deleteKeyByPattern(String pattern) {
+        Set<String> keys = redisTemplate.keys(pattern);
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys); // 검색된 키 삭제
+        }
     }
 }

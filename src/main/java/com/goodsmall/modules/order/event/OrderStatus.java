@@ -1,4 +1,4 @@
-package com.goodsmall.modules.order;
+package com.goodsmall.modules.order.event;
 
 public enum OrderStatus {
     PROCESSING,  // 주문 처리 중
