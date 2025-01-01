@@ -1,7 +1,7 @@
 package com.hanghae.common.handler;
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

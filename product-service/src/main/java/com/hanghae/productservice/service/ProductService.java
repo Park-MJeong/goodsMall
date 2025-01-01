@@ -1,6 +1,6 @@
 package com.hanghae.productservice.service;
 
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import com.hanghae.common.util.SliceUtil;
 import com.hanghae.productservice.domain.Product;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j(topic = "ProductService")
+@Slf4j(topic = "Product-Service-controller")
 public class ProductService {
     private final ProductRepository repository;
 
@@ -34,6 +34,12 @@ public class ProductService {
             throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
         }
         return product;
+    }
+
+    //  제품 수량 및 상태 조회
+    public Product getProductQuantity(Long id){
+        return repository.findProductById(id).orElseThrow(
+                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
 
@@ -90,7 +96,11 @@ public class ProductService {
     @Transactional
     public void increaseStock(Long productId,Integer quantity){
         Product product = checkStock(productId, quantity);
+        log.info("반영 전{}",product.getQuantity());
+
         product.increaseQuantity(quantity);
+        log.info("반영 후{}",product.getQuantity());
+
         repository.save(product);
     }
 

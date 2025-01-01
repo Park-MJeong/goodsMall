@@ -1,7 +1,7 @@
 package com.hanghae.userservice.jwt;
 
 
-import com.hanghae.common.util.EncryptionUtil;
+import com.hanghae.userservice.util.EncryptionUtil;
 import com.hanghae.userservice.domain.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

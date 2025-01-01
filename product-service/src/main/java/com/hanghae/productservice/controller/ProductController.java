@@ -42,6 +42,11 @@ public class ProductController {
         return productService.getProduct(productId);
     }
 
+    @GetMapping("/productQuantity/{productId}")
+    public Product getProductQuantity(@PathVariable Long productId){
+        return productService.getProductQuantity(productId);
+    }
+
     @PostMapping("/decreaseStock")
     public void decreaseStock(@RequestParam Long productId,@RequestParam Integer quantity){
         productService.decreaseStock(productId,quantity);

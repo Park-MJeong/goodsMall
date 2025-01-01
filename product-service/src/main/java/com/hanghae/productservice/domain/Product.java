@@ -1,6 +1,6 @@
 package com.hanghae.productservice.domain;
 
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;

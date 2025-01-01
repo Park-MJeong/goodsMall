@@ -1,6 +1,6 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.common.dto.ProductResponseDto;
+import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.dto.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -35,5 +35,11 @@ public class OrderProducts {
         this.productId = orderRequestDto.getProductId();
         this.quantity = orderRequestDto.getQuantity();
         this.price = responseDto.getProductPrice();
+    }
+    public void saveOrderProducts(Order order,Long productId,int quantity,BigDecimal price) {
+        this.order = order;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.price = price;
     }
 }

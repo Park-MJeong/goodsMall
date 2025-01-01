@@ -2,15 +2,18 @@ package com.hanghae.orderservice.service;
 
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.common.constant.ErrorCode;
-import com.hanghae.common.dto.ProductResponseDto;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
+import com.hanghae.orderservice.client.CartClient;
 import com.hanghae.orderservice.client.ProductClient;
+import com.hanghae.orderservice.client.dto.CartProductDto;
+import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.domain.OrderProductRepository;
 import com.hanghae.orderservice.domain.OrderRepository;
 import com.hanghae.orderservice.domain.entity.Order;
 import com.hanghae.orderservice.domain.entity.OrderProducts;
 import com.hanghae.orderservice.dto.OrderListDto;
+import com.hanghae.orderservice.dto.OrderListRequestDto;
 import com.hanghae.orderservice.dto.OrderProductDto;
 import com.hanghae.orderservice.dto.OrderRequestDto;
 import com.hanghae.orderservice.event.OrderStatus;
@@ -34,7 +37,7 @@ public class OrderService {
     private final OrderProductRepository orderProductRepository;
 
     private final ProductClient productClient;
-
+    private final CartClient cartClient;
 
     /**
      * 주문리스트 조회
@@ -58,7 +61,7 @@ public class OrderService {
     }
 
     /**
-     * 개별 주문 정보
+     * 주문 내역 상세
      */
     public ApiResponse<?> getOrderProductList(Long orderId){
         Order order = orderRepository.getOrderProductsList(orderId);
@@ -124,8 +127,67 @@ public class OrderService {
     }
 
 
+    /**
+     *  장바구니 상품 구매 (다건 구매)
+     */
+    @Transactional
+    public ApiResponse<?> createCartOrder(OrderListRequestDto dto){
+        BigDecimal totalPrice =BigDecimal.ZERO;
 
-//    주문상품테이블에서 상품이름이 추가된 dto
+//        1.주문 상태 생성
+        Order order = new Order(dto.getUserId());
+        orderRepository.save(order);
+
+//        2. 각 상품들 주문테이블 저장
+        for(Long cartProductId : dto.getCartProductList()){
+            CartProductDto cartProduct = cartClient.cartProductDtoInfo(cartProductId);
+            OrderProducts orderProduct = processOrderProduct(order,cartProduct.getProductId(),cartProduct.getQuantity());
+            totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(cartProduct.getQuantity())));
+            productClient.decreaseStock(cartProduct.getProductId(),cartProduct.getQuantity());
+            orderProductRepository.save(orderProduct);
+        }
+
+//        3. 주문성공, 주문테이블 정보 저장
+        order.updateOrder(totalPrice);
+        orderRepository.save(order);
+
+//        4. 주문한 상품 장바구니에서 삭제
+        List<Long> cartProductId =dto.getCartProductList();
+        cartClient.deleteCartProductList(cartProductId);
+
+        List<OrderProducts> orderProductList = orderProductRepository.findByOrder(order);
+        List<OrderProductDto> orderProductDtoList = orderProductList.stream().map(
+                orderProducts -> {
+                    ProductResponseDto productResponseDto = productInfo(orderProducts.getProductId());
+                    return new OrderProductDto(orderProducts,productResponseDto);
+                }).toList();
+        OrderListDto listDto = new OrderListDto(order,orderProductDtoList);
+        return ApiResponse.success(listDto);
+
+    }
+
+
+
+//    주문시 주문상품테이블 정보저장
+    private OrderProducts processOrderProduct(Order order,Long productId,Integer quantity){
+        ProductResponseDto product = productInfo(productId);
+
+//        주문수량보다 재고부족
+        if(product.getQuantity()<quantity){
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+        }
+
+        OrderProducts orderProducts = new OrderProducts();
+        orderProducts.saveOrderProducts(order,productId,quantity,product.getProductPrice());
+
+        productClient.decreaseStock(productId,quantity); //재고감소
+        orderProductRepository.save(orderProducts); //주문상품테이블 저장
+
+        return orderProducts;
+    }
+
+
+    //    주문상품테이블에서 상품이름이 추가된 dto
     private List<OrderProductDto> orderProductDtoList(Order order){
         return order.getOrderProducts().stream().map(
 
@@ -135,71 +197,8 @@ public class OrderService {
                 }).toList();
     }
 
-//    상품정보
+    //    상품정보
     private ProductResponseDto productInfo(Long productId){
         return productClient.information(productId);
     }
-
-    //    장바구니상품 다건 구매
-//    @Transactional
-//    public ApiResponse<?> createCartOrder(OrderListRequestDto dto){
-//        BigDecimal totalPrice =BigDecimal.ZERO;
-//
-//        //1.주문 상태 생성
-//        Order order = new Order(dto.getUserId());
-//
-//
-//        for(Long cartProductId : dto.getCartProductList()){
-//            CartProductInfo requestDto = getCartProductInfo(cartProductId);
-//            OrderProducts orderProduct = processOrderProduct(order,requestDto.getProductId(),requestDto.getQuantity());
-//
-//            log.info("orderProduct : {}", orderProduct.getProduct());
-//
-//            totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(requestDto.getQuantity())));
-//
-//        }
-//
-//        // 3. 주문성공, 정보 저장
-//        order.updateOrder(totalPrice);
-//        orderRepository.save(order);
-//        orderProductRepository.save(orderProduct);
-//
-////        4. 주문한 장바구니 상품 삭제
-//        List<Long> cartProductId =dto.getCartProductList();
-//        cartService.deleteCartProductList(cartProductId);
-//
-//        List<OrderProducts> orderProductList = opRepository.findByOrder(order);
-//        log.info("orderProductList : {}", orderProductList.size());
-//        List<OrderProductDto> orderProductDtoList = orderProductList.stream().map(OrderProductDto::new).toList();
-//        OrderListDto listDto = new OrderListDto(order,orderProductDtoList);
-//        return ApiResponse.success(listDto);
-//
-//    }
-
-
-
-    //    /**
-//     * CartProductInfo 추출 및 데이터 반환
-//     */
-//    private CartProductInfo getCartProductInfo(Long cartProductId) {
-//        return cartService.getCartProductInformation(cartProductId);
-//    }
-
-
-//    /**
-//     *  주문처리
-//     */
-//    private OrderProducts processOrderProduct(Order order,Long productId,Integer quantity){
-//        Product product_information = getProduct(productId);
-//        if(product_information.getQuantity()<quantity){
-//            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
-//        }
-////        주문상품 테이블
-//        OrderProducts orderProducts = new OrderProducts(order,productId,quantity);
-//
-//        productClient.decreaseStock(productId,quantity); //재고감소
-//        opRepository.save(orderProducts);
-//
-//        return orderProducts;
-//    }
 }
