@@ -22,7 +22,6 @@ public interface JpaProductRepository extends JpaRepository<Product, Long> {
         """)
     List<Product> findOrderByOpenDateDesc(String keyword, Long cursor, Pageable pageable);
 
-
 //    @Query("select p from Product p where p.id= :productId AND (p.status = 'Pre-sale' OR p.status = 'On Sale')")
 //    Optional<Product> findProduct(long productId);
 

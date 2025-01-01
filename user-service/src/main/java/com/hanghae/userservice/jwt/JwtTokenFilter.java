@@ -1,6 +1,6 @@
 package com.hanghae.userservice.jwt;
 
-import com.hanghae.common.util.EncryptionUtil;
+import com.hanghae.userservice.util.EncryptionUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

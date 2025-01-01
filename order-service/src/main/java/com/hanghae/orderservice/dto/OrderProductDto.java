@@ -1,6 +1,6 @@
 package com.hanghae.orderservice.dto;
 
-import com.hanghae.common.dto.ProductResponseDto;
+import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.domain.entity.OrderProducts;
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ public class OrderProductDto {
      * 주문 내역 리스트에서 보여지는 상품 정보
      */
 
-    public OrderProductDto(OrderProducts orderProduct,ProductResponseDto productResponseDto) {
+    public OrderProductDto(OrderProducts orderProduct, ProductResponseDto productResponseDto) {
         this.productId = orderProduct.getProductId();
         this.productName = productResponseDto.getProductName();
         this.quantity = orderProduct.getQuantity();

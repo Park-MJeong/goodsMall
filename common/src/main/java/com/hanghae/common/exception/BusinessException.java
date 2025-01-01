@@ -1,6 +1,5 @@
 package com.hanghae.common.exception;
 
-import com.hanghae.common.constant.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

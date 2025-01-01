@@ -1,6 +1,6 @@
 package com.hanghae.common.api;
 
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

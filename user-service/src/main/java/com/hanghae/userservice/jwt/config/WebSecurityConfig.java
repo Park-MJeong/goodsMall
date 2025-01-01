@@ -1,6 +1,6 @@
 package com.hanghae.userservice.jwt.config;
 
-import com.hanghae.common.util.EncryptionUtil;
+import com.hanghae.userservice.util.EncryptionUtil;
 import com.hanghae.userservice.jwt.*;
 import com.hanghae.userservice.service.RedisService;
 import jakarta.servlet.http.HttpServletResponse;

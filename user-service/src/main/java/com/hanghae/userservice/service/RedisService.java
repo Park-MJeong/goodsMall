@@ -1,6 +1,6 @@
 package com.hanghae.userservice.service;
 
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import com.hanghae.userservice.dto.VerifyDto;
 import jakarta.annotation.PostConstruct;

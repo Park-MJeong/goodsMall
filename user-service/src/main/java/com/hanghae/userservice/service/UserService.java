@@ -1,9 +1,9 @@
 package com.hanghae.userservice.service;
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
-import com.hanghae.common.util.EncryptionUtil;
+import com.hanghae.userservice.util.EncryptionUtil;
 import com.hanghae.userservice.domain.User;
 import com.hanghae.userservice.domain.UserRepository;
 import com.hanghae.userservice.dto.EmailRequestDto;

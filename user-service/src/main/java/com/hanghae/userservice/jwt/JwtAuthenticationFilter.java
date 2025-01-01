@@ -1,7 +1,7 @@
 package com.hanghae.userservice.jwt;
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.common.constant.ErrorCode;
+import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
