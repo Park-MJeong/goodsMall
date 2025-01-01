@@ -1,5 +1,6 @@
 package com.hanghae.productservice.controller;
 
+import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.dto.ProductDto;
 import com.hanghae.productservice.dto.SliceProductDto;
 import com.hanghae.productservice.service.ProductService;
@@ -35,6 +36,11 @@ public class ProductController {
     public ResponseEntity<ProductDto>getProduct(@PathVariable Long productId ){
         return ResponseEntity.ok(productService.getProductDto(productId));
        }
+
+    @GetMapping("/information/{productId}")
+    public Product information(@PathVariable Long productId){
+        return productService.getProduct(productId);
+    }
 
     @PostMapping("/decreaseStock")
     public void decreaseStock(@RequestParam Long productId,@RequestParam Integer quantity){

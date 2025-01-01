@@ -17,9 +17,11 @@ import java.util.Map;
 @Slf4j
 public class CustomLogoutHandler implements LogoutHandler {
     private final TokenRepository tokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public CustomLogoutHandler(TokenRepository tokenRepository) {
+    public CustomLogoutHandler(TokenRepository tokenRepository, JwtTokenProvider jwtTokenProvider) {
         this.tokenRepository = tokenRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
@@ -33,8 +35,8 @@ public class CustomLogoutHandler implements LogoutHandler {
 
         // [STEP2-1] 토큰이 존재하는 경우
         if (token != null) {
-            long expiredTime = JwtTokenProvider.getExpirationTime(authorizationHeader);
-            Long userId= JwtTokenProvider.getClaimsToUserId(token);
+            long expiredTime = jwtTokenProvider.getExpirationTime(authorizationHeader);
+            Long userId= jwtTokenProvider.getClaimsToUserId(token);
             if(expiredTime>0){
                 tokenRepository.addToBlacklist(authorizationHeader,expiredTime);
             }

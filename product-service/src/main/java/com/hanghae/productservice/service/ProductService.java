@@ -19,13 +19,21 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "ProductService")
 public class ProductService {
     private final ProductRepository repository;
 
     //   공통: 제품 정보 조회
     public Product getProduct(Long id){
-        return repository.getProduct(id).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_SOLD_OUT));
+        Product product =repository.findProductById(id).orElseThrow(
+                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        if(product.getStatus().equals("Sold Out")){
+            throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
+        }
+        if(product.getStatus().equals("Pre-sale")){
+            throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
+        }
+        return product;
     }
 
 
@@ -38,7 +46,9 @@ public class ProductService {
         return product;
     }
 
-    //전체 상품 조회
+    /**
+     * 전체 상품 조회
+     */
     public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<Product> products = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
@@ -56,7 +66,9 @@ public class ProductService {
         return showList;
     }
 
-    //    제품 상세 정보
+    /**
+     * 제품 상세 페이지
+     */
     public ProductDto getProductDto(Long id) {
         Product product = getProduct(id);
         return new ProductDto(product);
@@ -66,30 +78,23 @@ public class ProductService {
 //    제품 구매시 재고감소
     @Transactional
     public void decreaseStock(Long productId,Integer quantity){
+
         Product product = checkStock(productId, quantity);
+        log.info("감소 전{}",product.getQuantity());
+
         product.decreaseQuantity(quantity);
+        log.info("감소 후{}",product.getQuantity());
         repository.save(product);
     }
+// 주문 취소 시 재고 반영
     @Transactional
     public void increaseStock(Long productId,Integer quantity){
         Product product = checkStock(productId, quantity);
-        product.decreaseQuantity(quantity);
+        product.increaseQuantity(quantity);
         repository.save(product);
     }
 
-////    주문취소시 재고반영
-//    @Transactional
-//    public void updateProductQuantities(Order order) {
-//        for (OrderProducts products : order.getOrderProducts()) {
-//            Product product = products.getProduct();
-//            log.info("원래 수량{}", product.getQuantity());
-//
-//            product.increaseQuantity(product.getQuantity());
-//            repository.save(product);
-//
-//            log.info("재고반영 수량{}", product.getQuantity());
-//        }
-//    }
+
 
 
 }

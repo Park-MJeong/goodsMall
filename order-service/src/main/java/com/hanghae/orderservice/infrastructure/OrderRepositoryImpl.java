@@ -1,8 +1,8 @@
 package com.hanghae.orderservice.infrastructure;
 
-import com.goodsmall.modules.order.event.OrderStatus;
-import com.goodsmall.modules.order.domain.OrderRepository;
-import com.goodsmall.modules.order.domain.entity.Order;
+import com.hanghae.orderservice.domain.OrderRepository;
+import com.hanghae.orderservice.domain.entity.Order;
+import com.hanghae.orderservice.event.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +20,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Page<Order> getOrderList(Long userId, Pageable pageable) {
-        return  jpaOrderRepository.findOrdersWithProductsList(userId,pageable);
+        return  jpaOrderRepository.findOrderList(userId,pageable);
     }
 
     @Override

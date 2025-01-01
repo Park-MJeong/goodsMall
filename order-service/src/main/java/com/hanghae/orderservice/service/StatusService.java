@@ -1,8 +1,9 @@
 package com.hanghae.orderservice.service;
 
-import com.goodsmall.modules.order.event.OrderStatus;
-import com.goodsmall.modules.order.domain.OrderRepository;
-import com.goodsmall.modules.order.domain.entity.Order;
+
+import com.hanghae.orderservice.domain.OrderRepository;
+import com.hanghae.orderservice.domain.entity.Order;
+import com.hanghae.orderservice.event.OrderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -52,11 +53,11 @@ public abstract class StatusService {
             log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
         }
 //        반품신청->반품완료 + 재고반영
-        List<Order> returnOrders = orderRepository.findByStatus(OrderStatus.RETURN_NOW,now.minusDays(1));
-        for (Order order : returnOrders) {
-            order.setStatus(OrderStatus.RETURN_COMPLETE);
-            orderService.cancelOrder(order.getId());
-        }
+//        List<Order> returnOrders = orderRepository.findByStatus(OrderStatus.RETURN_NOW,now.minusDays(1));
+//        for (Order order : returnOrders) {
+//            order.setStatus(OrderStatus.RETURN_COMPLETE);
+//            orderService.cancelOrder(order.getId());
+//        }
     }
 
 

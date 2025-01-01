@@ -1,16 +1,14 @@
 package com.hanghae.orderservice.domain.entity;
 
-
-import com.goodsmall.modules.product.domain.Product;
+import com.hanghae.common.dto.ProductResponseDto;
+import com.hanghae.orderservice.dto.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Entity
 @Getter
-@Setter
 @Table(name = "order_products")
 public class OrderProducts {
     @Id
@@ -23,19 +21,19 @@ public class OrderProducts {
     @Column(name = "price", nullable = false)
     private BigDecimal price;
 
-    @ManyToOne
+    @ManyToOne( fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    private long productId;
+
     public OrderProducts() {}
 
-    public OrderProducts(Order order, Product product, int quantity) {
+    public OrderProducts(Order order, OrderRequestDto orderRequestDto, ProductResponseDto responseDto) {
+        System.out.println(order.getId());
         this.order = order;
-        this.product = product;
-        this.quantity = quantity;
-        this.price = product.getProductPrice();
+        this.productId = orderRequestDto.getProductId();
+        this.quantity = orderRequestDto.getQuantity();
+        this.price = responseDto.getProductPrice();
     }
 }

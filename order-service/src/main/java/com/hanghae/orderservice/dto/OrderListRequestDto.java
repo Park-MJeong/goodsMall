@@ -9,5 +9,6 @@ import java.util.List;
 @Setter
 public class OrderListRequestDto {
     private List<Long> cartProductList;
+    private long userId;
 
 }

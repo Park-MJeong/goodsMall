@@ -1,8 +1,9 @@
 package com.hanghae.orderservice.infrastructure;
 
-import com.goodsmall.modules.order.domain.OrderProductRepository;
-import com.goodsmall.modules.order.domain.entity.Order;
-import com.goodsmall.modules.order.domain.entity.OrderProducts;
+
+import com.hanghae.orderservice.domain.OrderProductRepository;
+import com.hanghae.orderservice.domain.entity.Order;
+import com.hanghae.orderservice.domain.entity.OrderProducts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

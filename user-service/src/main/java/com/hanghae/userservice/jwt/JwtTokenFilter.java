@@ -55,7 +55,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             log.error("Token 만료");
             return;
         }
-        String userEmail = JwtTokenProvider.getClaimsToUserEmail(token);
+        String userEmail = jwtTokenProvider.getClaimsToUserEmail(token);
 
         try {
             setAuthentication(userEmail);

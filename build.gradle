@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.6'
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
@@ -23,33 +22,22 @@ configurations {
 repositories {
     mavenCentral()
 }
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // 메일 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    //Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
 
-    // jwt
-    compileOnly group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
-    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
-    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // Security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    // validation
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+    }
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }
