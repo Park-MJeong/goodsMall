@@ -21,15 +21,15 @@ import javax.crypto.SecretKey;
 import java.util.Map;
 
 @Component
-@Slf4j
+@Slf4j(topic = "gateway JWT필터")
 public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
 
-    private final SecretKey secretKey;
+    private static SecretKey secretKey;
 
-    public JwtFilter(@Value("${jwt.secret}") String jwtSecret) {
+    public JwtFilter(@Value("${spring.jwt.secret.key}") String jwtSecret) {
         super(Config.class);
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     @Override
@@ -42,15 +42,16 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
                 return handleUnauthorized(response, "Invalid User Request.");
             }
 
-            String authHeader = request.getHeaders().getOrEmpty(HttpHeaders.AUTHORIZATION).get(0);
+            String authHeader = request.getHeaders().getOrEmpty(HttpHeaders.AUTHORIZATION).getFirst();
             if (!authHeader.startsWith("Bearer ")) {
                 return handleUnauthorized(response, "Invalid Authorization header format.");
             }
 
+            log.info(authHeader);
             String token = authHeader.substring(7);
 
-            try {
 
+            try {
                 Claims claims = Jwts.parserBuilder()
                         .setSigningKey(secretKey)
                         .build()
@@ -78,7 +79,7 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
             log.info("Custom PRE filter: request uri -> {}", request.getURI());
             log.info("Custom PRE filter: request id -> {}", request.getId());
 
-            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+            return chain.filter(exchange).then(Mono.fromRunnable(() ->{
                 log.info("Custom POST filter: response status code -> {}", response.getStatusCode());
             }));
         };

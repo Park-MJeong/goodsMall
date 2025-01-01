@@ -1,6 +1,6 @@
 package com.cartservice.domain.entity;
 
-import com.goodsmall.modules.product.domain.Product;
+import com.hanghae.productservice.domain.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

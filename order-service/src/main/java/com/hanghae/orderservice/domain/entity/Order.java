@@ -1,12 +1,13 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.goodsmall.modules.order.event.OrderStatus;
-import com.goodsmall.modules.user.domain.User;
+import com.hanghae.orderservice.event.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
@@ -23,7 +24,6 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 
@@ -31,31 +31,38 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(name = "created_At", nullable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     @Column(name = "updated_At", nullable = false)
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
     private List<OrderProducts> orderProducts;
 
-    @Setter
-    @ManyToOne(fetch = FetchType.LAZY) // N:1 관계로 User를 참조
-    @JoinColumn(name = "user_id", nullable = false) // 외래키 설정
-    private User user;
+    private Long userId;
 
 
     public Order(){}
 
-    public Order(User user) {
-        this.user = user;
+    public Order(Long userId) {
+        this.userId = userId;
         this.status = OrderStatus.PROCESSING;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.totalPrice = BigDecimal.ZERO;
+    }
+
+    public void updateOrder(BigDecimal totalPrice){
+        this.totalPrice = totalPrice;
+        this.status = OrderStatus.COMPLETE;
+        this.updatedAt = LocalDateTime.now();
+    }
+    public void statusChanged(){
+        this.status = OrderStatus.CANCELLED;
+        this.updatedAt = LocalDateTime.now();
     }
 
 

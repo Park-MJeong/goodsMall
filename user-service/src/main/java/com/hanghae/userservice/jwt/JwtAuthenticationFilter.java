@@ -22,11 +22,13 @@ import java.util.Map;
 
 @Slf4j(topic = "로그인 및 JWT 생성")
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+    private final JwtTokenProvider jwtTokenProvider;
     private final TokenRepository tokenRepository;
     private final Long EXPIRE_LIMIT = 24*60*60*1000L; // 24시간
 
 
-    public JwtAuthenticationFilter(TokenRepository tokenRepository) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, TokenRepository tokenRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
         this.tokenRepository = tokenRepository;
         setFilterProcessesUrl("/api/users/login");
     }
@@ -59,13 +61,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String email = userDetails.getEmail();
         Long userId = userDetails.getId();
 
-        String accessToken = JwtTokenProvider.createAccessToken(userId,email);
+        String accessToken = jwtTokenProvider.createAccessToken(userId,email);
 
         String refreshToken;
         Long refreshExpire = tokenRepository.getRefreshTokenTTL(userId);
         if(refreshExpire <= EXPIRE_LIMIT || refreshExpire == -2){
-            refreshToken = JwtTokenProvider.createRefreshToken(userId);
-            long expiredTime = JwtTokenProvider.getExpirationTime(refreshToken);
+            refreshToken = jwtTokenProvider.createRefreshToken(userId);
+            long expiredTime = jwtTokenProvider.getExpirationTime(refreshToken);
             tokenRepository.saveRefreshToken(userId,refreshToken, expiredTime);
         }else {
             refreshToken = tokenRepository.getRefreshToken(userId);

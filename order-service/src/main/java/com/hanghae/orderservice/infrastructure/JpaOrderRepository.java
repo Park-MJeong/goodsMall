@@ -17,18 +17,16 @@ public interface JpaOrderRepository extends JpaRepository<Order, Long> {
     @Query("""
         SELECT o FROM Order o
         LEFT JOIN FETCH o.orderProducts op
-        LEFT JOIN FETCH op.product p
-        WHERE o.user.id = :userId
+        WHERE o.userId = :userId
         ORDER BY o.createdAt DESC,o.id desc
     """)
-    Page<Order> findOrdersWithProductsList(@Param("userId") Long userId, Pageable pageable);
+    Page<Order> findOrderList(@Param("userId") Long userId, Pageable pageable);
 
     @Query(
     """
     SELECT o
     FROM Order o
     LEFT JOIN FETCH o.orderProducts op
-    LEFT JOIN FETCH op.product p
     WHERE o.id = :orderId
     ORDER BY o.createdAt DESC,o.id desc
     """)

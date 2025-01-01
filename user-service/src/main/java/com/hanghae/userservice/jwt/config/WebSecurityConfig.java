@@ -50,7 +50,7 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(tokenRepository);
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtTokenProvider,tokenRepository);
         filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
         return filter;
     }
