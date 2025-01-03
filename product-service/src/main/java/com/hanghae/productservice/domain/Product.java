@@ -5,12 +5,14 @@ import com.hanghae.common.exception.BusinessException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@NoArgsConstructor
 @Table(name = "products")
 public class Product {
     @Id
@@ -36,7 +38,18 @@ public class Product {
     @Column(name="status")
     private String status;
 
-//    제품 재고 감소
+    public Product(long id, String productName, String description, BigDecimal productPrice, LocalDateTime openDate, int quantity, String status) {
+        this.id = id;
+        this.productName = productName;
+        this.description = description;
+        this.productPrice = productPrice;
+        this.openDate = openDate;
+        this.quantity = quantity;
+        this.status = status;
+
+    }
+
+    //    제품 재고 감소
     public void decreaseQuantity(int quantity) {
         if (this.quantity < quantity) {
             throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
