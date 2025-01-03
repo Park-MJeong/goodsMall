@@ -1,17 +1,169 @@
-application:
-  container_name: goodsMall
-  restart: on-failure
-  build:
-    context: ./
-    dockerfile: Dockerfile
-  ports:
-    - "8080:8080"
-  environment:
-    SPRING_DATASOURCE_URL: jdbc://mysql:3306/goodsmall?allowPublicKeyRetrieval=true
-    SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-    SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-  depends_on:
-    mysql:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
+services:
+  redis:
+    image: redis
+    container_name: redis1
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "6379:6379"
+    volumes:
+      - D:/Docker/redis_volume:/data
+      - D:/Docker/redis_volume/redis-v/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - goodsmall-network
+
+  redis-insight:
+    image: redis/redisinsight
+    container_name: redisinsight1
+    restart: always
+    ports:
+      - 5540:5540
+    volumes:
+      - D:/Docker/redisinsight_volume:/data
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - goodsmall-network
+
+
+  mysql:
+    image: mysql
+    container_name: mysql1
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: goodsmall
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "3306:3306"
+    networks:
+      - goodsmall-network
+
+  eureka-server:
+    image: eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - goodsmall-network
+
+  gateway-service:
+    image: gateway-service:latest
+    container_name: gateway-service
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8000:8000"
+    networks:
+      - goodsmall-network
+
+  cart-service:
+    image: order-service:latest
+    container_name: cart-service
+    depends_on:
+      - mysql
+      - redis
+      - redis-insight
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/goodsmall?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME:  ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis1
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "9001:9001"
+    networks:
+      - goodsmall-network
+  order-service:
+    image: order-service:latest
+    container_name: order-service
+    depends_on:
+      - mysql
+      - redis
+      - redis-insight
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/goodsmall?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME:  ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis1
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "9002:9002"
+    networks:
+      - goodsmall-network
+
+
+  product-service:
+    image: product-service:latest
+    container_name: product-service
+    depends_on:
+      - mysql
+      - redis
+      - redis-insight
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/goodsmall?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME:  ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis1
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "9003:9003"
+    networks:
+      - goodsmall-network
+
+
+  user-service:
+    image: user-service:latest
+    container_name: user-service
+    depends_on:
+      - mysql
+      - redis
+      - redis-insight
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/goodsmall?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME:  ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis1
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "9004:9004"
+    networks:
+      - goodsmall-network
+
+
+
+
+
+networks:
+  goodsmall-network:
+    driver: bridge

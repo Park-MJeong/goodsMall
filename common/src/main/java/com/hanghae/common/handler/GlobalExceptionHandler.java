@@ -6,11 +6,12 @@ import com.hanghae.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import java.net.BindException;
+
 
 @RestControllerAdvice
 @Slf4j
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ApiResponse<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error("handleMethodArgumentNotValidException", e);
-        final ApiResponse<?> response = ApiResponse.createValidationFail(e.getBindingResult());
+        final ApiResponse<?> response = ApiResponse.createException(HttpStatus.BAD_REQUEST.value(), e.getMessage());
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ApiResponse<String>> handleException(Exception e) {
         log.error("handleException", e);
-        final ApiResponse<String> response = ApiResponse.createException(ErrorCode.INTERNAL_SERVER_ERROR);
+        final ApiResponse<String> response = ApiResponse.createException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
 
         return new ResponseEntity<>(response, ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus());
     }

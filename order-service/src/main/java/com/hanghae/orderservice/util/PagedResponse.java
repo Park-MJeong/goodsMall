@@ -1,4 +1,4 @@
-package com.hanghae.common.util;
+package com.hanghae.orderservice.util;
 
 import lombok.Data;
 
