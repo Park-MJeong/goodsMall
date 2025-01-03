@@ -2,7 +2,6 @@ package com.hanghae.common.exception;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.FeignException;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -10,16 +9,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class CustomErrorDecoder implements ErrorDecoder {
     ObjectMapper objectMapper = new ObjectMapper();
     private final ErrorDecoder defaultErrorDecoder = new Default();
-
-//    에러에서 path추출
-    private static final Pattern pattern = Pattern.compile("(?<=during\\s)\\[[^\\]]+\\]\\s+to\\s+\\[[^\\]]+\\]");
 
     @Override
     public Exception decode(String methodKey, Response response) {
