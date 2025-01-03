@@ -38,6 +38,7 @@ public class CartService {
      * 장바구니 내 상품리스트 조회 ,dto에 담아서 전달
      * */
 
+    @Transactional
     public ApiResponse<?> getCart(Long userId) {
         Cart cart = getCartByUserId(userId);
         if (cart.getCartProducts().isEmpty()) {

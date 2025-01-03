@@ -3,10 +3,8 @@ package com.hanghae.productservice.controller;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.dto.ProductDto;
-import com.hanghae.productservice.dto.SliceProductDto;
 import com.hanghae.productservice.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
