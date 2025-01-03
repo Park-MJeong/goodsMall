@@ -1,8 +1,9 @@
 package com.hanghae.productservice.service;
 
+import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
-import com.hanghae.common.util.SliceUtil;
+import com.hanghae.productservice.util.SliceUtil;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.domain.ProductRepository;
 import com.hanghae.productservice.dto.ProductDto;
@@ -36,8 +37,8 @@ public class ProductService {
         return product;
     }
 
-    //  제품 수량 및 상태 조회
-    public Product getProductQuantity(Long id){
+    //  제품 정보 상태관련, 예외처리없이 전달
+    public Product getProductAll(Long id){
         return repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
@@ -55,7 +56,7 @@ public class ProductService {
     /**
      * 전체 상품 조회
      */
-    public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
+    public ApiResponse<?> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<Product> products = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
         List<SliceProductDto> productDtos = products.stream()
@@ -65,11 +66,11 @@ public class ProductService {
         Slice<SliceProductDto> showList = SliceUtil.getSlice(productDtos,size);
 
         if (showList.isEmpty()) {
-            return SliceUtil.getSlice(
-                    List.of(new SliceProductDto("더 이상 상품이 존재하지 않습니다.")), size);
+            return ApiResponse.success(SliceUtil.getSlice(
+                    List.of(new SliceProductDto("더 이상 상품이 존재하지 않습니다.")), size));
         }
 
-        return showList;
+        return ApiResponse.success(showList);
     }
 
     /**

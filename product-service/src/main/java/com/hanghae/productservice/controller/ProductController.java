@@ -1,5 +1,6 @@
 package com.hanghae.productservice.controller;
 
+import com.hanghae.common.api.ApiResponse;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.dto.ProductDto;
 import com.hanghae.productservice.dto.SliceProductDto;
@@ -22,21 +23,25 @@ public class ProductController {
 
     /*등록되어 있는 상품 리스트 조회*/
     @GetMapping("/")
-    public ResponseEntity<Slice<SliceProductDto>> getProducts(@RequestParam(value = "search")String search,
-                                                              @RequestParam(value = "cursor",required = false)Long cursor,
-                                                              @RequestParam(value = "size",required = false)Integer size){
+    public ResponseEntity<ApiResponse<?>> getProducts(@RequestParam(value = "search")String search,
+                                                      @RequestParam(value = "cursor",required = false)Long cursor,
+                                                      @RequestParam(value = "size",required = false)Integer size){
         if (cursor == null) {
             cursor = 0L;
         }
-        Slice<SliceProductDto> result = productService.getProductList(search, cursor, size);
-        return ResponseEntity.ok(result);
+        ApiResponse<?> response = productService.getProductList(search, cursor, size);
+        return ResponseEntity.ok(response);
     }
+
     /*상품상세정보*/
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDto>getProduct(@PathVariable Long productId ){
         return ResponseEntity.ok(productService.getProductDto(productId));
        }
 
+
+       /**
+        * feign client */
     @GetMapping("/information/{productId}")
     public Product information(@PathVariable Long productId){
         return productService.getProduct(productId);
@@ -44,7 +49,7 @@ public class ProductController {
 
     @GetMapping("/productQuantity/{productId}")
     public Product getProductQuantity(@PathVariable Long productId){
-        return productService.getProductQuantity(productId);
+        return productService.getProductAll(productId);
     }
 
     @PostMapping("/decreaseStock")

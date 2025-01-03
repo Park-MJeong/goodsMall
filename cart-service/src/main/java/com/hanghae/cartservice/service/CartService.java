@@ -40,6 +40,9 @@ public class CartService {
 
     public ApiResponse<?> getCart(Long userId) {
         Cart cart = getCartByUserId(userId);
+        if (cart.getCartProducts().isEmpty()) {
+            return ApiResponse.success("장바구니에 담긴 상품이 없습니다.");
+        }
         CartListDto listDto = createCartListDto(cart);
         return ApiResponse.success(listDto);
     }
