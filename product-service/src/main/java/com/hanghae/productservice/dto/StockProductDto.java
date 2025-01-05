@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class StockProductDto {
     private long productId;
-    private int stock;
+    private long stock;
 
     public StockProductDto(Product product) {
         this.productId = product.getId();

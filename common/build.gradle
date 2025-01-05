@@ -32,7 +32,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	//Redis
+	implementation 'org.redisson:redisson-spring-boot-starter:3.40.1'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 
 
 }
