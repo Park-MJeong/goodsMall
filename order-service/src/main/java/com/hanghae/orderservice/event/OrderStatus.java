@@ -8,5 +8,6 @@ public enum OrderStatus {
     CANCELLED,   // 주문 취소
     RETURN_NOW,     // 반품중
     RETURN_COMPLETE, //반품완료
-    RETURN_NOT_ALLOWED // 반품 불가
+    RETURN_NOT_ALLOWED, // 반품 불가
+    FAILED      // 주문 실패(결제 실패시 함께 처리)
 }

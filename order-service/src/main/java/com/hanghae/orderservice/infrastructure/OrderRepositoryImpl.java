@@ -43,5 +43,4 @@ public class OrderRepositoryImpl implements OrderRepository {
         return jpaOrderRepository.findByStatusAndUpdatedAtBefore(status,date);
     }
 
-
 }

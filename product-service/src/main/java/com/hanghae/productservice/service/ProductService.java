@@ -12,9 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,12 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final ProductRepository repository;
 
-    //   공통: 제품 정보 조회
+    private static final String REDIS_STOCK_KEY = "product:stock:";
+    private final RedisTemplate<String,Integer> redisTemplate;
+
+    /**
+     * 공통 :제품정보 제공
+     */
     public Product getProduct(Long id){
         Product product =repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -37,14 +44,18 @@ public class ProductService {
         return product;
     }
 
-    //  제품 정보 상태관련, 예외처리없이 전달
+    /**
+     * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
+     */
     public Product getProductAll(Long id){
         return repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
 
-    //   공통: 제품 수량 체크
+    /**
+     * 공통 :제품수량체크
+     */
     public Product checkStock(Long productId, int quantity) {
         Product product = getProduct(productId);
         if (product.getQuantity() < quantity) {
@@ -78,6 +89,12 @@ public class ProductService {
      */
     public ProductDto getProductDto(Long id) {
         Product product = getProduct(id);
+
+//        상세페이지 들어왔다는것은 살 확률 있음. 레디스에 재고넣어줌
+        String key = REDIS_STOCK_KEY + product.getId();
+        if(redisTemplate.opsForValue().get(key) ==null){
+            redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+        }
         return new ProductDto(product);
     }
 

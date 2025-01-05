@@ -48,10 +48,14 @@ public enum ErrorCode {
 
     PASSWORD_CURRENT_ERROR(HttpStatus.BAD_REQUEST,"현재 비밀번호와 일치하지 않습니다."),
     NEW_PASSWORD_ERROR(HttpStatus.BAD_REQUEST,"새 비밀번호와 일치하지 않습니다."),
-    INVALID_PASSWORD_CHANGE(HttpStatus.BAD_REQUEST,"현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
+    INVALID_PASSWORD_CHANGE(HttpStatus.BAD_REQUEST,"현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
 
 
-
+//    결제 실패
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제내역입니다."),
+    FAILED_TIME_PAYMENT(HttpStatus.BAD_REQUEST,"시간초과로 결제가 취소됩니다."),
+    FAILED_QUANTITY_PAYMENT(HttpStatus.BAD_REQUEST,"재고부족으로 결제가 취소됩니다."),
+    CANCELED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 취소하셨습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

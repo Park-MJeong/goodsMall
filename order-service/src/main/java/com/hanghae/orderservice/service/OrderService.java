@@ -12,36 +12,47 @@ import com.hanghae.orderservice.domain.OrderProductRepository;
 import com.hanghae.orderservice.domain.OrderRepository;
 import com.hanghae.orderservice.domain.entity.Order;
 import com.hanghae.orderservice.domain.entity.OrderProducts;
-import com.hanghae.orderservice.dto.OrderListDto;
-import com.hanghae.orderservice.dto.OrderListRequestDto;
-import com.hanghae.orderservice.dto.OrderProductDto;
-import com.hanghae.orderservice.dto.OrderRequestDto;
+import com.hanghae.orderservice.dto.Order.OrderListDto;
+import com.hanghae.orderservice.dto.Order.OrderListRequestDto;
+import com.hanghae.orderservice.dto.Order.OrderProductDto;
+import com.hanghae.orderservice.dto.Order.OrderRequestDto;
 import com.hanghae.orderservice.event.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
 @Slf4j
 @Service
-@AllArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-
     private final ProductClient productClient;
     private final CartClient cartClient;
+    private final RedisTemplate<String,Integer> redisTemplate;
+    private static final String REDIS_STOCK_KEY = "product:stock:";
+
+    public OrderService(OrderRepository orderRepository, OrderProductRepository orderProductRepository, ProductClient productClient, CartClient cartClient, RedisTemplate<String, Integer> redisTemplate) {
+        this.orderRepository = orderRepository;
+        this.orderProductRepository = orderProductRepository;
+        this.productClient = productClient;
+        this.cartClient = cartClient;
+        this.redisTemplate = redisTemplate;
+    }
 
     /**
      * 주문리스트 조회
      */
+    @Transactional(readOnly = true)
     public ApiResponse<?> getOrderList(Long userId, int pageNumber, int pageSize){
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 //        1. 해당 아이디의 주문 내역 리스트 조회
@@ -53,7 +64,7 @@ public class OrderService {
         List<Order> orders = orderList.getContent();
         List<OrderListDto> listDto = orders.stream().map(
                 order-> {
-//                    3. 해당 주문의 물품리스트정보
+//                    3. 해당 주문의 물품리스트 정보
                     List<OrderProductDto> orderProductDtoList = orderProductDtoList(order);
                 return new OrderListDto(order,orderProductDtoList);}).toList();
 
@@ -63,6 +74,7 @@ public class OrderService {
     /**
      * 주문 내역 상세
      */
+    @Transactional(readOnly = true)
     public ApiResponse<?> getOrderProductList(Long orderId){
         Order order = orderRepository.getOrderProductsList(orderId);
 
@@ -73,58 +85,75 @@ public class OrderService {
     }
 
     /**
-     * 상품 단건 구매
+     * 주문 내역 생성
      */
     @Transactional
-    public ApiResponse<?> createOrder(OrderRequestDto dto){
-        BigDecimal totalPrice =BigDecimal.ZERO;
+    public ApiResponse<?> createOrder(long userId,OrderRequestDto orderRequestDto){
+//        1.재고 파악
+        Integer stock =redisTemplate.opsForValue().get(REDIS_STOCK_KEY + orderRequestDto.getProductId());
+        if(stock == null || stock<orderRequestDto.getQuantity()){
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+        }
 
-        //1.주문 상태 생성
-        Order order = new Order(dto.getUserId());
+//        2.상품정보 가져오기
+        ProductResponseDto responseDto = productInfo(orderRequestDto.getProductId());
+
+//        3.주문테이블 생성
+        Order order = new Order(userId);
         orderRepository.save(order);
-        ProductResponseDto responseDto = productInfo(dto.getProductId());
 
-        productClient.decreaseStock(dto.getProductId(),dto.getQuantity());
+//        4.주문제품 테이블 생성
+        OrderProducts orderProducts = new OrderProducts(order,orderRequestDto,responseDto.getProductPrice());
+        orderProductRepository.save(orderProducts);
 
-//        2. 주문 처리
-        OrderProducts orderProduct = new OrderProducts(order,dto,responseDto);
+//        5.총 주문 금액 계산
+        BigDecimal totalPrice = orderProducts.getPrice().multiply(BigDecimal.valueOf(orderProducts.getQuantity()));
 
-
-        totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
-
-        // 3. 주문성공, 정보 저장
-        order.updateOrder(totalPrice);
+//        6. 주문테이블에 저장
+        order.updatePrice(totalPrice);
         orderRepository.save(order);
-        orderProductRepository.save(orderProduct);
 
-        OrderListDto listDto = new OrderListDto(orderProduct,responseDto);
-        return ApiResponse.success(listDto);
+        return ApiResponse.success("주문테이블이 생성되었습니다.[주문Id]: "+order.getId());
 
     }
-
     /**
-     * 주문 취소 또는 반품시 상태변경
+     * 결제성공 -> 주문 성공
      */
-    public ApiResponse<?> cancelOrder(Long orderId){
-        Order order =orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-//        1. 취소 가능한 주문인지 확인
-        if(order.getStatus()!= OrderStatus.COMPLETE && order.getStatus()!=OrderStatus.RETURN_COMPLETE){
-            throw new BusinessException(ErrorCode.ORDER_CANCELLED_FAILED);
-        }
-//        2.제품 테이블 재고 반영
-        for(OrderProducts orderProducts : order.getOrderProducts()){
-           productClient.increaseStock(orderProducts.getProductId(),orderProducts.getQuantity());
-        }
-//        3.주문 테이블 상태, 취소로 변경
-        order.statusChanged();
-
+    public void orderComplete(Long orderId){
+        Order order = getOrderById(orderId);
+        order.statusComplete();
         orderRepository.save(order);
-
-        log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
-
-
-        return ApiResponse.success(order.getStatus()+"처리 되었습니다.");
     }
+
+//    /**
+//     * 상품 단건 구매
+//     */
+//    @Transactional
+//    public ApiResponse<?> createOrder(OrderRequestDto dto){
+//        BigDecimal totalPrice =BigDecimal.ZERO;
+//
+//        //1.주문 상태 생성
+//        Order order = new Order(dto.getUserId());
+//        orderRepository.save(order);
+//        ProductResponseDto responseDto = productInfo(dto.getProductId());
+//
+//        productClient.decreaseStock(dto.getProductId(),dto.getQuantity());
+//
+////        2. 주문 처리
+//        OrderProducts orderProduct = new OrderProducts(order,dto,responseDto);
+//
+//
+//        totalPrice = totalPrice.add(orderProduct.getPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
+//
+//        // 3. 주문성공, 정보 저장
+//        order.updateOrder(totalPrice);
+//        orderRepository.save(order);
+//        orderProductRepository.save(orderProduct);
+//
+//        OrderListDto listDto = new OrderListDto(orderProduct,responseDto);
+//        return ApiResponse.success(listDto);
+//
+//    }
 
 
     /**
@@ -148,14 +177,14 @@ public class OrderService {
         }
 
 //        3. 주문성공, 주문테이블 정보 저장
-        order.updateOrder(totalPrice);
+        order.updatePrice(totalPrice);
         orderRepository.save(order);
 
 //        4. 주문한 상품 장바구니에서 삭제
         List<Long> cartProductId =dto.getCartProductList();
         cartClient.deleteCartProductList(cartProductId);
 
-        List<OrderProducts> orderProductList = orderProductRepository.findByOrder(order);
+        List<OrderProducts> orderProductList = getOrderProductList(order);
         List<OrderProductDto> orderProductDtoList = orderProductList.stream().map(
                 orderProducts -> {
                     ProductResponseDto productResponseDto = productInfo(orderProducts.getProductId());
@@ -164,6 +193,41 @@ public class OrderService {
         OrderListDto listDto = new OrderListDto(order,orderProductDtoList);
         return ApiResponse.success(listDto);
 
+    }
+
+
+
+    /**
+     * 결제 실패 -> 주문 실패
+     */
+    public void failOrder(Long orderId){
+        Order order = getOrderById(orderId);
+        order.statusFailed();
+        orderRepository.save(order);
+    }
+
+    /**
+     * 주문 취소 또는 반품시 상태변경
+     */
+    public ApiResponse<?> cancelOrder(Long orderId){
+        Order order =orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+//        1. 취소 가능한 주문인지 확인
+        if(order.getStatus()!= OrderStatus.COMPLETE && order.getStatus()!=OrderStatus.RETURN_COMPLETE){
+            throw new BusinessException(ErrorCode.ORDER_CANCELLED_FAILED);
+        }
+//        2.제품 테이블 재고 반영
+        for(OrderProducts orderProducts : order.getOrderProducts()){
+           productClient.increaseStock(orderProducts.getProductId(),orderProducts.getQuantity());
+        }
+//        3.주문 테이블 상태, 취소로 변경
+        order.statusCancel();
+
+        orderRepository.save(order);
+
+        log.info("상태변경{},날짜변경{}",order.getStatus(),order.getUpdatedAt());
+
+
+        return ApiResponse.success(order.getStatus()+"처리 되었습니다.");
     }
 
 
@@ -186,6 +250,12 @@ public class OrderService {
         return orderProducts;
     }
 
+    public Order getOrderById(Long orderId){
+        return orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+    public List<OrderProducts> getOrderProductList(Order order){
+        return orderProductRepository.findByOrder(order);
+    }
 
     //    주문상품테이블에서 상품이름이 추가된 dto
     private List<OrderProductDto> orderProductDtoList(Order order){
