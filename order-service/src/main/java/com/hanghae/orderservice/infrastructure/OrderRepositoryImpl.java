@@ -2,7 +2,7 @@ package com.hanghae.orderservice.infrastructure;
 
 import com.hanghae.orderservice.domain.OrderRepository;
 import com.hanghae.orderservice.domain.entity.Order;
-import com.hanghae.orderservice.event.OrderStatus;
+import com.hanghae.orderservice.util.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +42,5 @@ public class OrderRepositoryImpl implements OrderRepository {
     public List<Order> findByStatus(OrderStatus status, LocalDateTime date){
         return jpaOrderRepository.findByStatusAndUpdatedAtBefore(status,date);
     }
-
 
 }

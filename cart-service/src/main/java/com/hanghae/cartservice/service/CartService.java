@@ -38,8 +38,12 @@ public class CartService {
      * 장바구니 내 상품리스트 조회 ,dto에 담아서 전달
      * */
 
+    @Transactional
     public ApiResponse<?> getCart(Long userId) {
         Cart cart = getCartByUserId(userId);
+        if (cart.getCartProducts().isEmpty()) {
+            return ApiResponse.success("장바구니에 담긴 상품이 없습니다.");
+        }
         CartListDto listDto = createCartListDto(cart);
         return ApiResponse.success(listDto);
     }

@@ -1,19 +1,23 @@
 package com.hanghae.productservice.service;
 
+import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
-import com.hanghae.common.util.SliceUtil;
+import com.hanghae.productservice.util.SliceUtil;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.domain.ProductRepository;
 import com.hanghae.productservice.dto.ProductDto;
 import com.hanghae.productservice.dto.SliceProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,27 +27,39 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final ProductRepository repository;
 
-    //   공통: 제품 정보 조회
+    private static final String REDIS_STOCK_KEY = "product:stock:";
+    private final RedisTemplate<String,Integer> redisTemplate;
+
+    /**
+     * 공통 :제품정보 제공
+     */
+
     public Product getProduct(Long id){
         Product product =repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        if(product.getStatus().equals("Sold Out")){
-            throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
+        switch (product.getStatus()) {
+            case "Sold Out":
+                throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
+            case "Pre-sale":
+                throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
+            default:
+                return product;
         }
-        if(product.getStatus().equals("Pre-sale")){
-            throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
-        }
-        return product;
     }
 
-    //  제품 수량 및 상태 조회
-    public Product getProductQuantity(Long id){
+    /**
+     * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
+     */
+    @Cacheable(value = "productDetails", key = "#id")
+    public Product getProductAll(Long id){
         return repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
 
-    //   공통: 제품 수량 체크
+    /**
+     * 공통 :제품수량체크
+     */
     public Product checkStock(Long productId, int quantity) {
         Product product = getProduct(productId);
         if (product.getQuantity() < quantity) {
@@ -55,7 +71,8 @@ public class ProductService {
     /**
      * 전체 상품 조회
      */
-    public Slice<SliceProductDto> getProductList(String search, Long cursor, Integer size){
+    @Transactional(readOnly = true)
+    public ApiResponse<?> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<Product> products = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
         List<SliceProductDto> productDtos = products.stream()
@@ -65,18 +82,25 @@ public class ProductService {
         Slice<SliceProductDto> showList = SliceUtil.getSlice(productDtos,size);
 
         if (showList.isEmpty()) {
-            return SliceUtil.getSlice(
-                    List.of(new SliceProductDto("더 이상 상품이 존재하지 않습니다.")), size);
+            return ApiResponse.success(SliceUtil.getSlice(
+                    List.of(new SliceProductDto("더 이상 상품이 존재하지 않습니다.")), size));
         }
 
-        return showList;
+        return ApiResponse.success(showList);
     }
 
     /**
      * 제품 상세 페이지
      */
+    @Transactional(readOnly = true)
     public ProductDto getProductDto(Long id) {
-        Product product = getProduct(id);
+        Product product = getProductAll(id);
+
+//        상세페이지 들어왔다는것은 살 확률 있음. 레디스에 재고넣어줌
+        String key = REDIS_STOCK_KEY + product.getId();
+        if(redisTemplate.opsForValue().get(key) ==null){
+            redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+        }
         return new ProductDto(product);
     }
 

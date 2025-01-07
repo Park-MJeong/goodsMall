@@ -1,15 +1,26 @@
 package com.hanghae.common.config;
 
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.time.Duration;
+
 @Configuration
+@EnableCaching
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String host;
@@ -26,23 +37,55 @@ public class RedisConfig {
         redisStandaloneConfiguration.setPassword(password);
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        // 기본 캐시 구성 (캐시 만료 시간: 1시간)
+        RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1))  // 1시간 캐시 만료 시간 설정
+                .disableCachingNullValues();    // null 값 캐시 저장 방지
+
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(defaultCacheConfig)
+                .build();
+    }
 
     @Bean
-    public RedisTemplate<?, ?> redisTemplate() {
+    public RedisTemplate<?, ?> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<?, ?> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
 
         // Key-Value 형태로 직렬화
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
         // Hash Key-Value 형태로 직렬화
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
 
         // 기본적으로 직렬화를 수행
         redisTemplate.setDefaultSerializer(new StringRedisSerializer());
 
         return redisTemplate;
     }
+
+    @Bean
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress("redis://" + host + ":" + port)  // Redis 서버 주소
+                .setPassword(password)                // Redis 비밀번호 (없다면 생략)
+                .setConnectionPoolSize(1000)          // 연결 풀 크기
+                .setConnectionMinimumIdleSize(100)    // 최소 유휴 연결 수
+                .setIdleConnectionTimeout(10000)      // 유휴 연결 타임아웃 (ms)
+                .setConnectTimeout(10000)             // 연결 타임아웃 (ms)
+                .setRetryAttempts(3)                  // 재시도 횟수
+                .setRetryInterval(1500)             // 재시도 간격 (ms)
+                .setTimeout(10000); // 응답 타임아웃 10초
+
+        // 락 기본 타임아웃 설정 (예: 60초)
+        config.setLockWatchdogTimeout(60000);
+
+        return Redisson.create(config);
+    }
+
 }

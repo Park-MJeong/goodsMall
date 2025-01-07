@@ -1,8 +1,8 @@
 package com.hanghae.orderservice.controller;
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.orderservice.dto.OrderListRequestDto;
-import com.hanghae.orderservice.dto.OrderRequestDto;
+import com.hanghae.orderservice.dto.Order.OrderListRequestDto;
+import com.hanghae.orderservice.dto.Order.OrderRequestDto;
 import com.hanghae.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,9 @@ public class OrderController {
      */
 
     @GetMapping("/")
-    public ResponseEntity<ApiResponse<?>> getOrderList(@RequestParam Long userId,@RequestParam(defaultValue = "0") int pageNumber, @RequestParam(defaultValue = "10")int pageSize){
+    public ResponseEntity<ApiResponse<?>> getOrderList(@RequestHeader("X-Claim-userId") long userId,
+                                                       @RequestParam(defaultValue = "0") int pageNumber,
+                                                       @RequestParam(defaultValue = "10")int pageSize){
 
         ApiResponse<?> response =orderService.getOrderList(userId, pageNumber, pageSize);
         return ResponseEntity.ok(response);
@@ -54,8 +56,8 @@ public class OrderController {
      */
 
     @PostMapping("/")
-    public ResponseEntity<ApiResponse<?>> createOrder( @RequestBody OrderRequestDto requestDto){
-        ApiResponse<?> response = orderService.createOrder(requestDto);
+    public ResponseEntity<ApiResponse<?>> createOrder(@RequestHeader("X-Claim-userId") long userId, @RequestBody OrderRequestDto requestDto){
+        ApiResponse<?> response = orderService.createOrder(userId,requestDto);
         return ResponseEntity.ok(response);
     }
     /**

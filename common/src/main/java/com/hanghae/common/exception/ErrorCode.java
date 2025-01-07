@@ -25,7 +25,8 @@ public enum ErrorCode {
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "인증 정보가 만료되었습니다."),
 
     // 서버 관련 에러 코드
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,
+            "서버에 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
     UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "알 수 없는 오류가 발생했습니다."),
 
     //    유저
@@ -42,15 +43,22 @@ public enum ErrorCode {
     PRODUCT_PRE_SALE(HttpStatus.BAD_REQUEST,"아직 판매준비중인 상품입니다."),
 
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."),
+    NOT_YOUR_ORDER(HttpStatus.BAD_REQUEST,"주문정보와 아이디가 일치하지 않습니다."),
     ORDER_CANCELLED_FAILED(HttpStatus.BAD_REQUEST,"주문취소 불가능한 상태입니다."),
 
 
     PASSWORD_CURRENT_ERROR(HttpStatus.BAD_REQUEST,"현재 비밀번호와 일치하지 않습니다."),
     NEW_PASSWORD_ERROR(HttpStatus.BAD_REQUEST,"새 비밀번호와 일치하지 않습니다."),
-    INVALID_PASSWORD_CHANGE(HttpStatus.BAD_REQUEST,"현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
+    INVALID_PASSWORD_CHANGE(HttpStatus.BAD_REQUEST,"현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
 
 
-
+//    결제 실패
+    PAYMENT_ALREADY(HttpStatus.NOT_FOUND, "이미 결제내역이 존재하는 주문입니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제내역입니다."),
+    FAILED_TIME_PAYMENT(HttpStatus.BAD_REQUEST,"시간초과로 결제가 취소됩니다."),
+    FAILED_QUANTITY_PAYMENT(HttpStatus.BAD_REQUEST,"재고부족으로 결제가 취소됩니다."),
+    FAILED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 실패하셨습니다."),
+    CANCELED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 취소하셨습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

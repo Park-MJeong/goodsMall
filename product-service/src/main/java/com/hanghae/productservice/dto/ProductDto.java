@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hanghae.productservice.domain.Product;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
-public class ProductDto {
+public class ProductDto implements Serializable {
     private Long id;
     private String productName;
     private String description;

@@ -35,12 +35,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
 
         //Authorization 헤더 검증
-        if (authorizationHeader==null|| !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader==null|| !authorizationHeader.startsWith(BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
         String token = JwtTokenProvider.getHeaderToToken(authorizationHeader);
-        System.out.println(authorizationHeader);
 
         if(tokenRepository.isBlacklisted(authorizationHeader)){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
