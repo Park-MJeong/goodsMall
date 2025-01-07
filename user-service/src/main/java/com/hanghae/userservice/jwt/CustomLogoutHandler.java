@@ -26,14 +26,10 @@ public class CustomLogoutHandler implements LogoutHandler {
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        log.debug("[+] 로그아웃이 수행이 됩니다.");
 
-        // [STEP1] 요청 값에서 토큰을 추출합니다.
         String authorizationHeader = request.getHeader("Authorization");
         String token = JwtTokenProvider.getHeaderToToken(authorizationHeader);
-//        String deviceId = request.getHeader("Device-Id");
 
-        // [STEP2-1] 토큰이 존재하는 경우
         if (token != null) {
             long expiredTime = jwtTokenProvider.getExpirationTime(authorizationHeader);
             Long userId= jwtTokenProvider.getClaimsToUserId(token);
@@ -42,7 +38,6 @@ public class CustomLogoutHandler implements LogoutHandler {
             }
             tokenRepository.deleteRefreshToken(userId);
         }
-        // [STEP2-2] 토큰이 존재하지 않는 경우
         else {
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("userInfo", null);
