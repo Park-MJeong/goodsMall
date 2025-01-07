@@ -1,13 +1,11 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.orderservice.event.OrderStatus;
+import com.hanghae.orderservice.util.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -71,7 +69,7 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
     public void statusCancel(){
-        this.status = OrderStatus.CANCELLED;
+        this.status = OrderStatus.CANCELED;
         this.updatedAt = LocalDateTime.now();
     }
 //

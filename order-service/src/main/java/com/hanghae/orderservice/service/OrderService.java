@@ -16,8 +16,7 @@ import com.hanghae.orderservice.dto.Order.OrderListDto;
 import com.hanghae.orderservice.dto.Order.OrderListRequestDto;
 import com.hanghae.orderservice.dto.Order.OrderProductDto;
 import com.hanghae.orderservice.dto.Order.OrderRequestDto;
-import com.hanghae.orderservice.event.OrderStatus;
-import lombok.AllArgsConstructor;
+import com.hanghae.orderservice.util.OrderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -113,7 +111,8 @@ public class OrderService {
         order.updatePrice(totalPrice);
         orderRepository.save(order);
 
-        return ApiResponse.success("주문테이블이 생성되었습니다.[주문Id]: "+order.getId());
+        OrderListDto listDto = new OrderListDto(orderProducts,responseDto);
+        return ApiResponse.success(listDto);
 
     }
     /**
