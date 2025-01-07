@@ -3,7 +3,7 @@ package com.hanghae.orderservice.service;
 
 import com.hanghae.orderservice.domain.OrderRepository;
 import com.hanghae.orderservice.domain.entity.Order;
-import com.hanghae.orderservice.event.OrderStatus;
+import com.hanghae.orderservice.util.OrderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

@@ -33,7 +33,7 @@ public class Product {
     private LocalDateTime openDate;
 
     @Column(name = "quantity")
-    private int quantity;
+    private Integer quantity;
 
     @Column(name="status")
     private String status;

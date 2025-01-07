@@ -10,6 +10,7 @@ import com.hanghae.productservice.dto.ProductDto;
 import com.hanghae.productservice.dto.SliceProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,21 +33,24 @@ public class ProductService {
     /**
      * 공통 :제품정보 제공
      */
+
     public Product getProduct(Long id){
         Product product =repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        if(product.getStatus().equals("Sold Out")){
-            throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
+        switch (product.getStatus()) {
+            case "Sold Out":
+                throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
+            case "Pre-sale":
+                throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
+            default:
+                return product;
         }
-        if(product.getStatus().equals("Pre-sale")){
-            throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
-        }
-        return product;
     }
 
     /**
      * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
      */
+    @Cacheable(value = "productDetails", key = "#id")
     public Product getProductAll(Long id){
         return repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -67,6 +71,7 @@ public class ProductService {
     /**
      * 전체 상품 조회
      */
+    @Transactional(readOnly = true)
     public ApiResponse<?> getProductList(String search, Long cursor, Integer size){
         int limitSize = SliceUtil.sliceSize(size);
         List<Product> products = repository.getProductList(search,cursor, Pageable.ofSize(limitSize));
@@ -87,8 +92,9 @@ public class ProductService {
     /**
      * 제품 상세 페이지
      */
+    @Transactional(readOnly = true)
     public ProductDto getProductDto(Long id) {
-        Product product = getProduct(id);
+        Product product = getProductAll(id);
 
 //        상세페이지 들어왔다는것은 살 확률 있음. 레디스에 재고넣어줌
         String key = REDIS_STOCK_KEY + product.getId();

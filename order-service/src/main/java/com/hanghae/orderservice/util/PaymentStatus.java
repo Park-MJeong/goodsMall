@@ -1,4 +1,4 @@
-package com.hanghae.orderservice.event;
+package com.hanghae.orderservice.util;
 
 public enum PaymentStatus {
     PROCESSING,  // 결제중

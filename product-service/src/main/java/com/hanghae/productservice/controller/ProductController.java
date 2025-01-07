@@ -34,6 +34,7 @@ public class ProductController {
     /*상품상세정보*/
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDto>getProduct(@PathVariable Long productId ){
+        log.info("------상품상세정보------");
         return ResponseEntity.ok(productService.getProductDto(productId));
        }
 

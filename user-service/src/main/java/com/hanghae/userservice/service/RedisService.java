@@ -6,6 +6,7 @@ import com.hanghae.userservice.dto.VerifyDto;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -13,12 +14,16 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class RedisService {
     private final RedisTemplate<String,String> redisTemplate;
     private HashOperations<String, String, String> hashOps;
     private static final String GOODS_MALL = "goodsMall";
+
+    @Autowired
+    public RedisService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @PostConstruct
     public void init() {

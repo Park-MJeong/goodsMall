@@ -43,6 +43,7 @@ public enum ErrorCode {
     PRODUCT_PRE_SALE(HttpStatus.BAD_REQUEST,"아직 판매준비중인 상품입니다."),
 
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."),
+    NOT_YOUR_ORDER(HttpStatus.BAD_REQUEST,"주문정보와 아이디가 일치하지 않습니다."),
     ORDER_CANCELLED_FAILED(HttpStatus.BAD_REQUEST,"주문취소 불가능한 상태입니다."),
 
 
@@ -52,9 +53,11 @@ public enum ErrorCode {
 
 
 //    결제 실패
+    PAYMENT_ALREADY(HttpStatus.NOT_FOUND, "이미 결제내역이 존재하는 주문입니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제내역입니다."),
     FAILED_TIME_PAYMENT(HttpStatus.BAD_REQUEST,"시간초과로 결제가 취소됩니다."),
     FAILED_QUANTITY_PAYMENT(HttpStatus.BAD_REQUEST,"재고부족으로 결제가 취소됩니다."),
+    FAILED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 실패하셨습니다."),
     CANCELED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 취소하셨습니다.");
 
     private final HttpStatus httpStatus;
