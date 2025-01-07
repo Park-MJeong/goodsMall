@@ -1,4 +1,4 @@
-package com.hanghae.orderservice.dto;
+package com.hanghae.orderservice.dto.Order;
 
 import lombok.Getter;
 import lombok.Setter;

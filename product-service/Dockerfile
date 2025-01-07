@@ -12,6 +12,5 @@ WORKDIR /app
 
 COPY --from=builder /app/product-service/build/libs/*.jar app.jar
 
-COPY --from=builder /app/product-service/src/main/resources/application.yml /app/application.yml
 
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.config.location=file:/app/application.yml"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

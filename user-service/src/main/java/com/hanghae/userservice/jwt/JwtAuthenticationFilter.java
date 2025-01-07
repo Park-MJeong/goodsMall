@@ -100,8 +100,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         ObjectMapper objectMapper = new ObjectMapper();
         response.setContentType("application/json; charset=UTF-8");
 
-        ApiResponse<String> res = ApiResponse.createException(e.getCode(),e.getMessage());
-        response.setStatus(e.getCode()); //응답헤더 코드설정
+        ApiResponse<?> res = ApiResponse.createException(response.getStatus(),e.getMessage());
+        response.setStatus(response.getStatus()); //응답헤더 코드설정
         response.getOutputStream().write(objectMapper.writeValueAsString(res).getBytes());
     }
 }

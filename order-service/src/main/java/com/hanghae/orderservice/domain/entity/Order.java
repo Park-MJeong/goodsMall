@@ -1,11 +1,11 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.orderservice.event.OrderStatus;
+import com.hanghae.orderservice.util.OrderStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,12 +17,14 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "orders")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
@@ -44,7 +46,6 @@ public class Order {
 
     private Long userId;
 
-
     public Order(){}
 
     public Order(Long userId) {
@@ -55,15 +56,22 @@ public class Order {
         this.totalPrice = BigDecimal.ZERO;
     }
 
-    public void updateOrder(BigDecimal totalPrice){
-        this.totalPrice = totalPrice;
+
+    public void updatePrice(BigDecimal price) {
+        this.totalPrice = price;
+    }
+    public void statusComplete(){
         this.status = OrderStatus.COMPLETE;
         this.updatedAt = LocalDateTime.now();
     }
-    public void statusChanged(){
-        this.status = OrderStatus.CANCELLED;
+    public void statusFailed(){
+        this.status = OrderStatus.FAILED;
         this.updatedAt = LocalDateTime.now();
     }
-
+    public void statusCancel(){
+        this.status = OrderStatus.CANCELED;
+        this.updatedAt = LocalDateTime.now();
+    }
+//
 
 }

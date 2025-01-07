@@ -5,13 +5,12 @@ import com.hanghae.cartservice.dto.CartProductInfo;
 import com.hanghae.cartservice.dto.CartProductUpdateRequestDto;
 import com.hanghae.cartservice.service.CartService;
 import com.hanghae.common.api.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.List;
-import java.util.Objects;
 
 
 @RestController
@@ -29,11 +28,8 @@ public class CartController {
      */
 
     @GetMapping("/")
-    public ResponseEntity<ApiResponse<?>> getCart(NativeWebRequest webRequest){
-        Long userId=0L;
-        if(webRequest.getHeader("X-Claim-userId")!=null){
-            userId = Long.parseLong(Objects.requireNonNull(webRequest.getHeader("X-Claim-userId")));
-        }
+    public ResponseEntity<ApiResponse<?>> getCart(HttpServletRequest request){
+        long userId=Long.parseLong(request.getParameter("X-Claim-userId"));
         ApiResponse<?> response = cartService.getCart(userId);
         return ResponseEntity.ok(response);
     }

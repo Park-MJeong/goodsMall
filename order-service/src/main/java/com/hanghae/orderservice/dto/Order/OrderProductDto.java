@@ -1,4 +1,4 @@
-package com.hanghae.orderservice.dto;
+package com.hanghae.orderservice.dto.Order;
 
 import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.domain.entity.OrderProducts;

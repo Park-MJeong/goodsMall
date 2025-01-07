@@ -1,4 +1,4 @@
-package com.hanghae.common.util;
+package com.hanghae.productservice.util;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;

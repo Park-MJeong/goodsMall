@@ -1,0 +1,61 @@
+services:
+  redis:
+    image: redis
+    container_name: redis1
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "6379:6379"
+    volumes:
+      - D:/Docker/redis_volume:/data
+      - D:/Docker/redis_volume/redis-v/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - goodsmall-network
+
+  redis-insight:
+    image: redis/redisinsight
+    container_name: redisinsight1
+    restart: always
+    ports:
+      - 5540:5540
+    volumes:
+      - D:/Docker/redisinsight_volume:/data
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - goodsmall-network
+
+  mysql:
+    image: mysql
+    container_name: mysql1
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: goodsmall
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "3306:3306"
+    networks:
+      - goodsmall-network
+
+networks:
+  goodsmall-network:
+    driver: bridge
