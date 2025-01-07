@@ -1,17 +1,15 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.orderservice.event.OrderStatus;
-import com.hanghae.orderservice.event.PaymentStatus;
+import com.hanghae.orderservice.util.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
-@Entity
 @Getter
+@Entity
 @Table(name = "payments")
 public class Payment {
     @Id
@@ -21,6 +19,9 @@ public class Payment {
     private Long orderId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Column(name="status",nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
     public Payment(Long orderId) {
@@ -45,9 +46,14 @@ public class Payment {
 
     public void statusFail(){
         this.status = PaymentStatus.FAILED;
+        this.updatedAt = LocalDateTime.now();
     }
-
+    public void statusCancel(){
+        this.status = PaymentStatus.CANCELED;
+        this.updatedAt = LocalDateTime.now();
+    }
     public void statusCompile(){
         this.status = PaymentStatus.COMPLETE;
+        this.updatedAt = LocalDateTime.now();
     }
 }

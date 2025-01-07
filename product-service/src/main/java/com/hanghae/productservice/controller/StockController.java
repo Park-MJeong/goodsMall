@@ -17,19 +17,22 @@ public class StockController {
         this.stockService = stockService;
     }
 
-    /**
-     * 당일 한정판매 제품리스트 재고
-     * */
-    @GetMapping("/")
-    public ResponseEntity<ApiResponse<?>> getProductStockList() {
-        return stockService.getProductStockList();
-    }
+//    /**
+//     * 당일 한정판매 제품리스트 재고
+//     * */
+//    @GetMapping("/")
+//    public ResponseEntity<ApiResponse<?>> getProductStockList() {
+//        return stockService.getProductStockList();
+//    }
+
     /**
      * 해당 제품에 대한 재고
      * */
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse<?>> getStock(@PathVariable Long productId) {
-       return stockService.getStock(productId);
+        Long stock = stockService.getStock(productId);
+        ApiResponse<?> response = ApiResponse.success("남은 재고: "+stock+"개");
+       return ResponseEntity.ok(response);
     }
 
 }
