@@ -15,6 +15,9 @@ public interface ProductClient {
     @GetMapping("/api/products/information/{productId}")
     ProductResponseDto information(@PathVariable("productId")Long productId);
 
+    @GetMapping("/productStatus/{productId}")
+    ProductResponseDto productStatus(@PathVariable Long productId);
+
     @PostMapping("/api/products/decreaseStock")
     void decreaseStock(@RequestParam("productId")Long productId,@RequestParam("quantity")Integer quantity);
 

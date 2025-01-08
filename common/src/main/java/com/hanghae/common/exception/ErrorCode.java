@@ -41,6 +41,7 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 상품을 찾을 수 없습니다."),
     PRODUCT_SOLD_OUT(HttpStatus.BAD_REQUEST,"품절상품이 포함되어있습니다."),
     PRODUCT_PRE_SALE(HttpStatus.BAD_REQUEST,"아직 판매준비중인 상품입니다."),
+    PRODUCT_NOT_ORDER(HttpStatus.BAD_REQUEST,"구매할수 없는 상품입니다."),
 
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다."),
     NOT_YOUR_ORDER(HttpStatus.BAD_REQUEST,"주문정보와 아이디가 일치하지 않습니다."),

@@ -3,6 +3,7 @@ package com.hanghae.productservice.controller;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.dto.ProductDto;
+import com.hanghae.productservice.service.CacheableProductService;
 import com.hanghae.productservice.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
+    private final CacheableProductService cacheableProductService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CacheableProductService cacheableProductService) {
         this.productService = productService;
+        this.cacheableProductService = cacheableProductService;
     }
 
     /*등록되어 있는 상품 리스트 조회*/
@@ -48,7 +51,12 @@ public class ProductController {
 
     @GetMapping("/productQuantity/{productId}")
     public Product getProductQuantity(@PathVariable Long productId){
-        return productService.getProductAll(productId);
+        return cacheableProductService.getProductAll(productId);
+    }
+
+    @GetMapping("/productStatus/{productId}")
+    public Product productStatus(@PathVariable Long productId){
+       return productService.isAvailableProducts(productId);
     }
 
     @PostMapping("/decreaseStock")
