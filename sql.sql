@@ -1,3 +1,9 @@
+CREATE DATABASE IF NOT EXISTS user_service;
+CREATE DATABASE IF NOT EXISTS product_service;
+CREATE DATABASE IF NOT EXISTS order_service;
+CREATE DATABASE IF NOT EXISTS cart_service;
+
+
 # - 회원 테이블 생성
 
 CREATE TABLE users (
@@ -23,8 +29,7 @@ CREATE TABLE products (
 # 장바구니 테이블 생성
 CREATE TABLE carts (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                       user_id BIGINT NOT NULL,
-                       FOREIGN KEY (user_id) REFERENCES users(ID) ON DELETE CASCADE
+                       user_id BIGINT NOT NULL
 );
 # - 장바구니 상품 테이블 생성
 CREATE TABLE cart_products (
@@ -32,8 +37,7 @@ CREATE TABLE cart_products (
                                cart_id BIGINT NOT NULL,
                                product_id BIGINT NOT NULL,
                                quantity INT NOT NULL,
-                               FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
-                               FOREIGN KEY (product_id) REFERENCES products(id)
+                               FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE
 );
 
 # - 주문 테이블 생성
@@ -43,8 +47,7 @@ CREATE TABLE orders (
                         total_price DECIMAL(10, 2) NOT NULL,
                         status VARCHAR(20) NOT NULL,
                         created_At DATETIME NOT NULL,
-                        updated_At DATETIME NOT NULL,
-                        FOREIGN KEY (user_id) REFERENCES users(id)
+                        updated_At DATETIME NOT NULL
 );
 # - 주문 상품 테이블 생성
 CREATE TABLE order_products (
@@ -52,9 +55,14 @@ CREATE TABLE order_products (
                                 order_id BIGINT NOT NULL,
                                 product_id BIGINT NOT NULL,
                                 quantity INTEGER NOT NULL,
-                                price DECIMAL(10, 2) NOT NULL,
-                                FOREIGN KEY (order_id) REFERENCES orders(id),
-                                FOREIGN KEY (product_id) REFERENCES products(id)
+                                price DECIMAL(10, 2) NOT NULL
+);
+CREATE TABLE payments (
+                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                          order_id BIGINT NOT NULL,
+                          created_at DATETIME NOT NULL,
+                          updated_at DATETIME NOT NULL,
+                          status VARCHAR(20) NOT NULL
 );
 # 상품의 정보를 변경시키기위해 복합 인덱스 설정
 CREATE INDEX idx_status_open_date ON products (status, product_open_date);
@@ -170,3 +178,6 @@ INSERT INTO cart_products (cart_id, product_id, quantity) VALUES
                                                               (10, 23, 4),
                                                               (10, 24, 2),
                                                               (10, 25, 1);
+
+CREATE INDEX idx_openDate_id ON products (product_open_date, id);
+EXPLAIN SELECT * FROM products WHERE id = 2;
