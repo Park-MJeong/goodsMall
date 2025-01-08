@@ -1,6 +1,7 @@
 package com.hanghae.productservice.controller;
 
 import com.hanghae.common.api.ApiResponse;
+import com.hanghae.productservice.dto.StockProductDto;
 import com.hanghae.productservice.service.StockService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,21 +18,14 @@ public class StockController {
         this.stockService = stockService;
     }
 
-//    /**
-//     * 당일 한정판매 제품리스트 재고
-//     * */
-//    @GetMapping("/")
-//    public ResponseEntity<ApiResponse<?>> getProductStockList() {
-//        return stockService.getProductStockList();
-//    }
-
     /**
-     * 해당 제품에 대한 재고
+     * 재고 API
+     * 남은 재고 화면에 보여줌
      * */
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse<?>> getStock(@PathVariable Long productId) {
-        Long stock = stockService.getStock(productId);
-        ApiResponse<?> response = ApiResponse.success("남은 재고: "+stock+"개");
+        StockProductDto stock = stockService.getStock(productId);
+        ApiResponse<?> response = ApiResponse.success(stock);
        return ResponseEntity.ok(response);
     }
 

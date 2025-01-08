@@ -1,17 +1,18 @@
 package com.hanghae.productservice.dto;
 
 import com.hanghae.productservice.domain.Product;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
+@Builder
 public class StockProductDto {
-    private long productId;
-    private long stock;
+    private  Long productId;
+    private  Integer stock;
 
-    public StockProductDto(Product product) {
-        this.productId = product.getId();
-        this.stock = product.getQuantity();
+    public StockProductDto(Long productId,Integer stock) {
+        this.productId = productId;
+        this.stock = stock;
     }
+
 }
