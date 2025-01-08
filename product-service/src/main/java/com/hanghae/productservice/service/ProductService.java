@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j(topic = "Product-Service-controller")
 public class ProductService {
     private final ProductRepository repository;
+    private final CacheableProductService cacheableProductService;
 
     private static final String REDIS_STOCK_KEY = "product:stock:";
     private final RedisTemplate<String,Integer> redisTemplate;
@@ -47,14 +49,6 @@ public class ProductService {
         }
     }
 
-    /**
-     * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
-     */
-    @Cacheable(value = "productDetails", key = "#id")
-    public Product getProductAll(Long id){
-        return repository.findProductById(id).orElseThrow(
-                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-    }
 
 
     /**
@@ -94,12 +88,14 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductDto getProductDto(Long id) {
-        Product product = getProductAll(id);
+        Product product = cacheableProductService.getProductAll(id);
 
 //        상세페이지 들어왔다는것은 살 확률 있음. 레디스에 재고넣어줌
         String key = REDIS_STOCK_KEY + product.getId();
-        if(redisTemplate.opsForValue().get(key) ==null){
-            redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+        if(!product.getStatus().equals("Sold Out")){
+            if(redisTemplate.opsForValue().get(key) ==null){
+                redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+            }
         }
         return new ProductDto(product);
     }
@@ -128,7 +124,29 @@ public class ProductService {
         repository.save(product);
     }
 
+    /**
+     * 상품 오픈하기
+     */
+    @Cacheable(value = "productStatus", key = "#productId")
+    public Product isAvailableProducts(Long productId){
+        log.info("[상품오픈하기]: 상품조회 진입");
+//        1. 상품조회
+        Product product = cacheableProductService.getProductAll(productId);
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime openTime = product.getOpenDate();
+//        2-1.품절이거나 오픈전 상품
+        if(product.getStatus().equals("Sold Out")||!now.isAfter(openTime)){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_ORDER);
+        }
+//        3. 오픈 상품 => 상태변경
+        product.statusOnSale(product);
+        repository.save(product);
+        String key = REDIS_STOCK_KEY+product.getId();
+        redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+
+        return product;
+    }
 
 
 }

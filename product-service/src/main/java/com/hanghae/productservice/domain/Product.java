@@ -4,6 +4,7 @@ import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
 @Table(name = "products")
 public class Product {
@@ -68,6 +70,10 @@ public class Product {
         else if(this.quantity > 0 && this.status.equals("Sold Out")) {
             this.status = "On Sale";
         }
+    }
+
+    public void statusOnSale(Product product){
+        this.status = "On Sale";
     }
 
 }

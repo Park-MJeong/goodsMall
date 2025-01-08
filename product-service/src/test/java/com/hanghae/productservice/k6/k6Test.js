@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 export let options = {
     stages: [
-        { duration: '1m', target: 8000 }, // 1분 동안 10,00명까지 증가
+        { duration: '1m', target: 10000 }, // 1분 동안 10,00명까지 증가
         { duration: '10s', target: 0 },     // 10 동안 종료
     ],
 };

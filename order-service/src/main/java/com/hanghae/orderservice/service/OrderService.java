@@ -87,14 +87,14 @@ public class OrderService {
      */
     @Transactional
     public ApiResponse<?> createOrder(long userId,OrderRequestDto orderRequestDto){
-//        1.재고 파악
+//        1. 상품 정보 가져오기
+        ProductResponseDto responseDto = availableProducts(orderRequestDto.getProductId());
+
+//        2.재고 파악
         Integer stock =redisTemplate.opsForValue().get(REDIS_STOCK_KEY + orderRequestDto.getProductId());
         if(stock == null || stock<orderRequestDto.getQuantity()){
             throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
         }
-
-//        2.상품정보 가져오기
-        ProductResponseDto responseDto = productInfo(orderRequestDto.getProductId());
 
 //        3.주문테이블 생성
         Order order = new Order(userId);
@@ -269,5 +269,9 @@ public class OrderService {
     //    상품정보
     private ProductResponseDto productInfo(Long productId){
         return productClient.information(productId);
+    }
+//    구매가능한 상품정보만
+    private ProductResponseDto availableProducts(Long productId){
+        return productClient.productStatus(productId);
     }
 }
