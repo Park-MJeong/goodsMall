@@ -1,12 +1,15 @@
 package com.hanghae.orderservice.controller;
 
 import com.hanghae.common.api.ApiResponse;
-import com.hanghae.orderservice.dto.Order.OrderListRequestDto;
-import com.hanghae.orderservice.dto.Order.OrderRequestDto;
+import com.hanghae.orderservice.dto.OrderListRequestDto;
+import com.hanghae.orderservice.dto.OrderProductStock;
+import com.hanghae.orderservice.dto.OrderRequestDto;
 import com.hanghae.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -26,7 +29,7 @@ public class OrderController {
      * @return 주문내역 리스트
      */
 
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<ApiResponse<?>> getOrderList(@RequestHeader("X-Claim-userId") long userId,
                                                        @RequestParam(defaultValue = "0") int pageNumber,
                                                        @RequestParam(defaultValue = "10")int pageSize){
@@ -44,7 +47,7 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<?>> getOrderProductList(@PathVariable Long orderId){
-        ApiResponse<?> response =orderService.getOrderProductList(orderId);
+        ApiResponse<?> response =orderService.getOrderProduct(orderId);
         return ResponseEntity.ok(response);
     }
 
@@ -55,7 +58,7 @@ public class OrderController {
      * @return 구매 상품 정보
      */
 
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<?>> createOrder(@RequestHeader("X-Claim-userId") long userId, @RequestBody OrderRequestDto requestDto){
         ApiResponse<?> response = orderService.createOrder(userId,requestDto);
         return ResponseEntity.ok(response);
@@ -83,5 +86,13 @@ public class OrderController {
     public ResponseEntity<ApiResponse<?>> cancelOrder(@PathVariable Long orderId){
         ApiResponse<?> response = orderService.cancelOrder(orderId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 해당 주문 상품들의 재고
+     */
+    @GetMapping("/orderProductStock/{orderId}")
+    public List<OrderProductStock> orderProductStock(@PathVariable Long orderId){
+        return orderService.getOrderProductStockList(orderId);
     }
 }

@@ -1,7 +1,6 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.orderservice.client.dto.ProductResponseDto;
-import com.hanghae.orderservice.dto.Order.OrderRequestDto;
+import com.hanghae.orderservice.dto.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,11 +1,7 @@
 package com.hanghae.orderservice.domain.entity;
 
-import com.hanghae.orderservice.util.OrderStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,8 +12,8 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
-@Builder
+@Builder(toBuilder = true)
+@NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "orders")
@@ -46,7 +42,6 @@ public class Order {
 
     private Long userId;
 
-    public Order(){}
 
     public Order(Long userId) {
         this.userId = userId;
@@ -60,18 +55,5 @@ public class Order {
     public void updatePrice(BigDecimal price) {
         this.totalPrice = price;
     }
-    public void statusComplete(){
-        this.status = OrderStatus.COMPLETE;
-        this.updatedAt = LocalDateTime.now();
-    }
-    public void statusFailed(){
-        this.status = OrderStatus.FAILED;
-        this.updatedAt = LocalDateTime.now();
-    }
-    public void statusCancel(){
-        this.status = OrderStatus.CANCELED;
-        this.updatedAt = LocalDateTime.now();
-    }
-//
 
 }
