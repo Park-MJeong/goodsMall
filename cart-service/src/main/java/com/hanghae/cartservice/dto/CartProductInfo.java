@@ -8,7 +8,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class CartProductInfo {
-    private Long userId;
     @NotNull(message = "상품 아이디는 필수 입력 값입니다.")
     private Long productId;
 

@@ -27,9 +27,9 @@ public class CartController {
      * GET /api/carts/
      */
 
-    @GetMapping("/")
-    public ResponseEntity<ApiResponse<?>> getCart(HttpServletRequest request){
-        long userId=Long.parseLong(request.getParameter("X-Claim-userId"));
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<?>> getCart(@RequestHeader("X-Claim-userId") Long userId){
+//        long userId=Long.parseLong(request.getParameter("X-Claim-userId"));
         ApiResponse<?> response = cartService.getCart(userId);
         return ResponseEntity.ok(response);
     }
@@ -39,9 +39,11 @@ public class CartController {
      * @param dto 원하는 상품의 아이디와 정보
      * @return 장바구니에 추가된 상품 정보
      */
-    @PostMapping("/")
-    public ResponseEntity<ApiResponse<?>> updateCart(@RequestBody @Valid CartProductInfo dto){
-        ApiResponse<?> response = cartService.updateCart(dto);
+    @PostMapping("")
+    public ResponseEntity<ApiResponse<?>> updateCart(@RequestBody @Valid CartProductInfo dto,
+                                                     @RequestHeader("X-Claim-userId") Long userId){
+
+        ApiResponse<?> response = cartService.updateCart(dto,userId);
         return ResponseEntity.ok(response);
     }
 
