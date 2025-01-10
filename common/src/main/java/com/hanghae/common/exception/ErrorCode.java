@@ -56,6 +56,7 @@ public enum ErrorCode {
 //    결제 실패
     PAYMENT_ALREADY(HttpStatus.NOT_FOUND, "이미 결제내역이 존재하는 주문입니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제내역입니다."),
+    INVALID_PAYMENT_STATUS(HttpStatus.NOT_FOUND, "결제상태가 올바르지 않습니다."),
     FAILED_TIME_PAYMENT(HttpStatus.BAD_REQUEST,"시간초과로 결제가 취소됩니다."),
     FAILED_QUANTITY_PAYMENT(HttpStatus.BAD_REQUEST,"재고부족으로 결제가 취소됩니다."),
     FAILED_PAYMENT(HttpStatus.BAD_REQUEST,"결제 실패하셨습니다."),

@@ -34,9 +34,7 @@ dependencies {
 	//Redis
 	implementation 'org.redisson:redisson-spring-boot-starter:3.40.1'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-	implementation 'org.springframework.kafka:spring-kafka'
-
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.3'
 
 
 }
