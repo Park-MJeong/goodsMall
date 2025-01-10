@@ -3,8 +3,7 @@ package com.hanghae.orderservice.dto;
 import lombok.Getter;
 
 @Getter
-public class OrderRequestDto {
-    private long productId;
+public class OrderProductStock {
+    private long orderProductId;
     private int quantity;
-
 }

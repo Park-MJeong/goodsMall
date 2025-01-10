@@ -1,5 +1,6 @@
-package com.hanghae.orderservice.dto.Order;
+package com.hanghae.orderservice.dto;
 
+import com.hanghae.orderservice.client.dto.ProductNameAndPriceDTO;
 import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.domain.entity.OrderProducts;
 import lombok.Getter;
@@ -10,7 +11,6 @@ import java.math.BigDecimal;
 public class OrderProductDto {
     private Long productId;
     private String productName;
-//    private BigDecimal totalProductPrice;
     private int quantity;
     private BigDecimal unitPrice;
 
@@ -18,12 +18,11 @@ public class OrderProductDto {
      * 주문 내역 리스트에서 보여지는 상품 정보
      */
 
-    public OrderProductDto(OrderProducts orderProduct, ProductResponseDto productResponseDto) {
+    public OrderProductDto(OrderProducts orderProduct, ProductNameAndPriceDTO productNameAndPriceDTO) {
         this.productId = orderProduct.getProductId();
-        this.productName = productResponseDto.getProductName();
+        this.productName = productNameAndPriceDTO.getProductName();
         this.quantity = orderProduct.getQuantity();
         this.unitPrice = orderProduct.getPrice();
-//        this.totalProductPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
     }
 
 }

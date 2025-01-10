@@ -1,7 +1,8 @@
 package com.hanghae.orderservice.domain;
 
 import com.hanghae.orderservice.domain.entity.Order;
-import com.hanghae.orderservice.util.OrderStatus;
+
+import com.hanghae.orderservice.domain.entity.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

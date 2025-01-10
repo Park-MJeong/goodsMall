@@ -4,6 +4,7 @@ package com.hanghae.orderservice.infrastructure;
 import com.hanghae.orderservice.domain.OrderProductRepository;
 import com.hanghae.orderservice.domain.entity.Order;
 import com.hanghae.orderservice.domain.entity.OrderProducts;
+import com.hanghae.orderservice.dto.OrderProductStock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -23,5 +24,10 @@ public class OrderProductRepositoryImpl implements OrderProductRepository {
     @Override
     public List<OrderProducts> findByOrder(Order order) {
         return repository.findByOrder(order);
+    }
+
+    @Override
+    public List<OrderProductStock> findStockByOrderId(Long orderId) {
+        return repository.findStockByOrderId(orderId);
     }
 }

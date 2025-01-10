@@ -1,4 +1,4 @@
-package com.hanghae.orderservice.util;
+package com.hanghae.orderservice.domain.entity;
 
 public enum OrderStatus {
     PROCESSING,  // 주문 처리 중
