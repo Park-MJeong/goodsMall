@@ -1,13 +1,17 @@
 package com.hanghae.productservice.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -16,10 +20,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @Table(name = "products")
-public class Product {
+public class Product implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name="product_name",nullable = false)
     private String productName;
@@ -31,7 +35,8 @@ public class Product {
     private BigDecimal productPrice;
 
     @Column(name="product_open_date")
-    @JsonFormat(pattern = "yyyy-MM-dd kk:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime openDate;
 
     @Column(name = "quantity")
