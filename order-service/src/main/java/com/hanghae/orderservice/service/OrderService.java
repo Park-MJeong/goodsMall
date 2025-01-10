@@ -149,8 +149,8 @@ public class OrderService {
         List<OrderProducts> orderProductList = getOrderProductList(order);
         List<OrderProductDto> orderProductDtoList = orderProductList.stream().map(
                 orderProducts -> {
-                    ProductResponseDto productResponseDto = productInfo(orderProducts.getProductId());
-                    return new OrderProductDto(orderProducts,productResponseDto);
+                    ProductNameAndPriceDTO productNameAndPriceDTO = availableProducts(orderProducts.getProductId());
+                    return new OrderProductDto(orderProducts,productNameAndPriceDTO);
                 }).toList();
         OrderListDto listDto = new OrderListDto(order,orderProductDtoList);
         return ApiResponse.success(listDto);

@@ -41,7 +41,7 @@ public class CartService {
     @Transactional
     public ApiResponse<?> getCart(Long userId) {
         Cart cart = getCartByUserId(userId);
-        if (cart.getCartProducts().isEmpty()) {
+        if (cart.getCartProducts()==null) {
             return ApiResponse.success("장바구니에 담긴 상품이 없습니다.");
         }
         CartListDto listDto = createCartListDto(cart);
@@ -68,9 +68,9 @@ public class CartService {
      * 장바구니  상품 추가
      * */
     @Transactional
-    public ApiResponse<?> updateCart(CartProductInfo dto){
+    public ApiResponse<?> updateCart(CartProductInfo dto,long userId){
 //        1. 해당 유저 장바구니 조회
-        Cart cart = getCartByUserId(dto.getUserId());
+        Cart cart = getCartByUserId(userId);
         ProductResponseDto product = productInfo(dto.getProductId());
 
 //        3. 해당 물건이 장바구니에 있으면 중복저장 방지
