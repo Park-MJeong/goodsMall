@@ -57,7 +57,7 @@ public class ProductService {
     public Product checkStock(Long productId, int quantity) {
         Product product = getProduct(productId);
         if (product.getQuantity() < quantity) {
-            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
+            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT,"부족한 제품: "+productId);
         }
         return product;
     }

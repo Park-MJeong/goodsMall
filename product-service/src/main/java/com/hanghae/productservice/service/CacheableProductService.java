@@ -5,6 +5,7 @@ import com.hanghae.common.exception.BusinessException;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.domain.ProductRepository;
+import com.hanghae.productservice.dto.CachedProduct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -39,23 +40,7 @@ public class CacheableProductService {
         return  product;
     }
 
-    private static class CachedProduct {
-        private final Product product;
-        private final long timestamp;
 
-        public CachedProduct(Product product, long timestamp) {
-            this.product = product;
-            this.timestamp = timestamp;
-        }
-
-        public Product getProduct() {
-            return product;
-        }
-
-        public long getTimestamp() {
-            return timestamp;
-        }
-    }
 
 //    public Product getProductAll(Long id){
 //
