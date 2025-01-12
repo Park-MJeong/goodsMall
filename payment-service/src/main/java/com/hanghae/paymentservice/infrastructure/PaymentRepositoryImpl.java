@@ -2,7 +2,10 @@ package com.hanghae.paymentservice.infrastructure;
 
 import com.hanghae.paymentservice.domain.PaymentRepository;
 import com.hanghae.paymentservice.domain.entity.Payment;
+import com.hanghae.paymentservice.domain.entity.PaymentStatus;
+import com.hanghae.paymentservice.dto.PaymentStatusDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -25,4 +28,10 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     public Payment findByOrderId(Long orderId) {
         return repository.findByOrderId(orderId);
     }
+
+    @Override
+    public PaymentStatusDto findStatusById(Long paymentId) {
+        return repository.findStatusById(paymentId);
+    }
+
 }

@@ -4,22 +4,30 @@ import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.BusinessException;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.kafka.OrderEvent;
+import com.hanghae.common.kafka.OrderRequestDto;
+import com.hanghae.common.kafka.PaymentEvent;
 import com.hanghae.paymentservice.client.OrderClient;
-import com.hanghae.paymentservice.client.dto.OrderProductStockList;
 import com.hanghae.paymentservice.domain.PaymentRepository;
 import com.hanghae.paymentservice.domain.entity.Payment;
 import com.hanghae.paymentservice.domain.entity.PaymentStatus;
+import com.hanghae.paymentservice.dto.PaymentStatusDto;
 import com.hanghae.paymentservice.kafka.producer.PaymentOrderProducer;
-import com.hanghae.paymentservice.service.scripts.RedisStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.hanghae.common.util.RedisKeyUtil.getPaymentKey;
 import static com.hanghae.common.util.RedisKeyUtil.getStockKey;
 
 @Service
@@ -27,17 +35,17 @@ import static com.hanghae.common.util.RedisKeyUtil.getStockKey;
 @RequiredArgsConstructor
 public class PaymentService {
     private final PaymentRepository paymentRepository;
-    private final RedisTemplate<String,Integer> redisTemplate;
+    private final RedisTemplate<String,Object> redisTemplate;
     private final RedissonClient redissonClient;
-    private final OrderClient orderClient;
     private final PaymentOrderProducer paymentOrderProducer;
-    private final RedisStockService redisStockService;
 
 
     /**
      * 재고 파악 후 결제 테이블 생성
      * */
     public void initPayment(OrderEvent orderEvent) {
+        List<OrderRequestDto> orderRequestDtos = orderEvent.getOrderRequestDtoList();
+
         Long orderId = orderEvent.getOrderId();
         String lockKey = getStockKey(orderId);
         RLock lock = redissonClient.getLock(lockKey); // 분산락 객체 반환
@@ -47,7 +55,8 @@ public class PaymentService {
                 throw new IllegalArgumentException("락 획득 실패");
             }
 //          1. 재고 확인
-            if (!checkStock(orderEvent.getProductId(),orderEvent.getQuantity())) {
+            if (!checkStock(orderRequestDtos)){
+//                1-1. 재고 확보 실패, 주문테이블 상태 변경 이벤트 발행
                 throw new BusinessException(ErrorCode.FAILED_QUANTITY_PAYMENT);
             }
 //          2. 결제 테이블 생성
@@ -56,14 +65,12 @@ public class PaymentService {
         }catch (InterruptedException e){
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
-
         }
         finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
-
     }
 
 //    결제 테이블 생성
@@ -78,45 +85,77 @@ public class PaymentService {
     }
 
 //    api에서 결제화면 진입전 테이블 생성유무 확인
-    public boolean isPaymentValid(Long orderId) {
+    public Payment isPaymentValid(Long orderId) {
+
         Payment payment = getValidPayment(orderId);
         if(!payment.getStatus().equals(PaymentStatus.PENDING)){
+            log.info("[테이블 생성유무 확인] -------- 결제테이블 생성되지 않음 --------");
             throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
-        return true;
+        log.info("[테이블 생성유무 확인] -------- 결제테이블 생성되어있음 --------");
+        return payment;
     }
 
     /**
-     * 결제 완료
+     * 결제 진행
      * */
     @Transactional
-    public ApiResponse<?> processPayment(Long orderId) {
-        Payment payment = getValidPayment(orderId);
+    public ApiResponse<?> processPayment(Payment payment) {
+        String key = getPaymentKey(payment.getId());
+//        10분이상 결제 되지않으면 결제 취소
+        redisTemplate.opsForValue().set(key,payment.getStatus(),Duration.ofMinutes(10));
 
         changePaymentStatus(payment.getId(),PaymentStatus.COMPLETE);
-        return ApiResponse.success(payment);
+        successPayment(payment.getOrderId());
+        return ApiResponse.success("결제완료되었습니다. 결제 상태: "+payment.getStatus());
     }
 
-
-
     /**
-     * 단일 제품, 재고 감소
+     * 결제 10분이내 진행되지않으면 취소
+     * 레디스 ttl 이용
      * */
-    public boolean checkStock(Long productId,int quantity){
-        String key = getStockKey(productId);
-        Long stock = redisTemplate.opsForValue().decrement(key,quantity);
+    public void cancelPayment(Long paymentId){
+        PaymentStatusDto paymentStatusDto= getStatus(paymentId);
+        PaymentStatus status = paymentStatusDto.getPaymentStatus();
+        Long orderId = paymentStatusDto.getOrderId();
+        if(status.equals(PaymentStatus.PENDING)){
+            changePaymentStatus(paymentId,PaymentStatus.CANCELED);
+            log.info("10분이내 결제가 이루어지지않아 결제 취소되었습니다.");
+            failurePayment(orderId);
 
-        if (stock==null || stock <0) {
-//            재고 부족시, 원상복귀
-            redisTemplate.opsForValue().increment(key,quantity);
-            return false;
+        }
+    }
+
+//    재고 파악
+    private boolean checkStock(List<OrderRequestDto> orderRequestDtos){
+        Map<String,Integer> decreaseStock = new ConcurrentHashMap<>();
+
+        for (OrderRequestDto orderRequestDto : orderRequestDtos) {
+            Long productId = orderRequestDto.getProductId();
+            Integer quantity = orderRequestDto.getQuantity();
+            String key = getStockKey(productId);
+//            1. 재고 감소, 재고 확보하기
+            Long stock = redisTemplate.opsForValue().decrement(key,quantity);
+            decreaseStock.put(key,quantity);
+            if (stock==null || stock <0) {
+//            2. 재고 부족, 이전 값 되돌리기
+                stockRollback(decreaseStock);
+                return false;
+            }
         }
         return true;
+    }
+
+//    재고확보 실패,rollback
+    private void stockRollback(Map<String,Integer> decreaseStock){
+        decreaseStock.forEach((key, quantity) ->
+                redisTemplate.opsForValue().increment(key, quantity)
+        );
     }
 
 //    결제 테이블 상태 변경
     private void changePaymentStatus(Long paymentId,PaymentStatus status){
-        Payment payment = getValidPayment(paymentId);
+        Payment payment = getPaymentInfo(paymentId);
         Payment updatePayment = payment.toBuilder()
                 .status(status)
                 .build();
@@ -133,25 +172,34 @@ public class PaymentService {
         return payment;
     }
 
-//    결제테이블 정보 조회
-    private Payment getPayment(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).orElse(null);
-        if (payment == null) {
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
-        }
-        return payment;
+//    결제 테이블 정보
+    private Payment getPaymentInfo(Long paymentId){
+        return paymentRepository.findById(paymentId).orElseThrow(
+                ()->new BusinessException(ErrorCode.PAYMENT_NOT_FOUND)
+        );
     }
 
 
-
-//    해당 주문의 제품id, 원하는 수량
-    private OrderProductStockList getOrderProductStockList(Long orderId){
-       return orderClient.orderProductStock(orderId);
+    private PaymentStatusDto getStatus(Long paymentId){
+        return paymentRepository.findStatusById(paymentId);
     }
 
-    //    실패시 order-service 로 보내는 kafka
-    public void sendFailurePayment(OrderEvent orderEvent) {
-        paymentOrderProducer.failurePayment(orderEvent);
+    public void successPayment(Long orderId){
+        PaymentEvent paymentEvent = PaymentEvent.builder()
+                .orderId(orderId)
+                .build();
+        paymentOrderProducer.failurePayment(paymentEvent);
+    }
+    //    재고확보 실패시 order-service 로 보내는 kafka
+    public void stockNotAvailable(OrderEvent orderEvent) {
+        paymentOrderProducer.stockNotAvailable(orderEvent);
     }
 
+    //    결제 취소,실패 시 order-service 로 보내는 kafka
+    public void failurePayment(Long orderId) {
+        PaymentEvent paymentEvent = PaymentEvent.builder()
+                .orderId(orderId)
+                .build();
+        paymentOrderProducer.failurePayment(paymentEvent);
+    }
 }

@@ -1,10 +1,13 @@
 package com.hanghae.paymentservice.kafka.producer;
 
+import com.hanghae.common.kafka.OrderRequestDto;
 import com.hanghae.common.kafka.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 
 @Slf4j(topic = "paymentProductProducer")
@@ -13,12 +16,10 @@ import org.springframework.stereotype.Component;
 public class PaymentProductProducer {
     private final KafkaTemplate<String,Object> kafkaTemplate;
 
-    public void successPayment(Long paymentId, Long productId, Integer quantity){
-        log.info("successPaymentEvent {}",paymentId);
+    public void successPayment(Long orderId){
+        log.info("successPaymentEvent");
         PaymentEvent paymentEvent = PaymentEvent.builder()
-                .paymentId(paymentId)
-                .productId(productId)
-                .quantity(quantity)
+                .orderId(orderId)
                 .build();
         kafkaTemplate.send("successPayment", paymentEvent);
     }

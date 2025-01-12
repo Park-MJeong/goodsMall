@@ -3,6 +3,7 @@ package com.hanghae.paymentservice.controller;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.BusinessException;
 import com.hanghae.common.exception.ErrorCode;
+import com.hanghae.paymentservice.domain.entity.Payment;
 import com.hanghae.paymentservice.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +33,13 @@ public class PaymentController {
      * @param orderId 주문아이디
      * @return 결제성공
      */
-    @PostMapping("/processPayment")
-    public ResponseEntity<ApiResponse<?>> processPayment(@RequestParam Long orderId, @RequestHeader("X-Claim-userId") Long userId){
+    @PostMapping("/process-payment")
+    public ResponseEntity<ApiResponse<?>> processPayment(@RequestParam Long orderId){
         ApiResponse<?> response =null;
         try {
 //            카프카 메세지로 재고확인&결제테이블 생성 후 진입 가능
-            if(paymentService.isPaymentValid(orderId)){
-                response =paymentService.processPayment(orderId);
-            }
+            Payment payment = paymentService.isPaymentValid(orderId);
+            response =paymentService.processPayment(payment);
         }catch (Exception e){
             throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
