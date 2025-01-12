@@ -109,6 +109,27 @@ services:
     networks:
       - goodsmall-network
 
+  payment-service:
+    image: payment-service:latest
+    container_name: payment-service
+    depends_on:
+      - mysql
+      - redis
+      - redis-insight
+      - eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/payment-service?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME:  ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "9004:9004"
+    networks:
+      - goodsmall-network
 
 networks:
   goodsmall-network:

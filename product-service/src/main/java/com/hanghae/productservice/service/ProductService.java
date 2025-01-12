@@ -127,7 +127,6 @@ public class ProductService {
     /**
      * 상품 오픈하기
      */
-    @Cacheable(value = "productStatus", key = "#productId")
     public Product isAvailableProducts(Long productId){
         log.info("[상품오픈하기]: 상품조회 진입");
 //        1. 상품조회
@@ -147,6 +146,4 @@ public class ProductService {
 
         return product;
     }
-
-
 }

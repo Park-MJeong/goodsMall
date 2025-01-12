@@ -23,7 +23,7 @@ public class ProductController {
     }
 
     /*등록되어 있는 상품 리스트 조회*/
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<ApiResponse<?>> getProducts(@RequestParam(value = "search")String search,
                                                       @RequestParam(value = "cursor",required = false)Long cursor,
                                                       @RequestParam(value = "size",required = false)Integer size){

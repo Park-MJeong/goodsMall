@@ -1,9 +1,6 @@
 package com.hanghae.productservice.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
 import jakarta.persistence.*;
@@ -35,8 +32,7 @@ public class Product implements Serializable {
     private BigDecimal productPrice;
 
     @Column(name="product_open_date")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime openDate;
 
     @Column(name = "quantity")
@@ -45,7 +41,7 @@ public class Product implements Serializable {
     @Column(name="status")
     private String status;
 
-    public Product(long id, String productName, String description, BigDecimal productPrice, LocalDateTime openDate, int quantity, String status) {
+    public Product(Long id, String productName, String description, BigDecimal productPrice, LocalDateTime openDate, int quantity, String status) {
         this.id = id;
         this.productName = productName;
         this.description = description;

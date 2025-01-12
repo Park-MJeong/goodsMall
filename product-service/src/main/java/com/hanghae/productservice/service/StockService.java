@@ -47,13 +47,14 @@ public class StockService {
         return stock;
     }
 
-//    없으면 db에서 재고 조회
+//    없으면 db에서 재고 조회, 레디스에 값 저장
     private Integer getStockFromDbAndCache(Long productId){
         Product product = cacheableProductService.getProductAll(productId);
         String key = getStockKey(productId);
         redisTemplate.opsForValue().set(key,product.getQuantity(),Duration.ofDays(1));
         return product.getQuantity();
     }
+
 
 
 
@@ -77,5 +78,15 @@ public class StockService {
                     openProduct.getQuantity(), Duration.ofDays(1));
         }
     }
+
+//    // Redis와 DB 재고 동기화 (주기적으로 실행)
+//    @Scheduled(fixedRate = 300000) // 5분마다 실행
+//    public void synchronizeStock() {
+//        List<Product> products = productRepository.findAll();
+//        for (Product product : products) {
+//            String stockKey = STOCK_KEY_PREFIX + product.getId();
+//            redisTemplate.opsForValue().set(stockKey,product.getQuantity());
+//        }
+//    }
 
 }
