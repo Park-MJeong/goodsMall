@@ -181,3 +181,6 @@ INSERT INTO cart_products (cart_id, product_id, quantity) VALUES
 
 CREATE INDEX idx_openDate_id ON products (product_open_date, id);
 EXPLAIN SELECT * FROM products WHERE id = 2;
+SHOW INDEX FROM products;
+SET SESSION slow_query_log = 1;
+SET SESSION long_query_time = 1;

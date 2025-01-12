@@ -20,8 +20,8 @@ public class OrderPaymentConsumer {
             paymentService.initPayment(orderEvent);
         }catch (Exception e){
 
-            log.info("[ 결제 테이블 생성 실패 ]");
-            paymentService.sendFailurePayment(orderEvent);
+            log.info("[ 재고 부족, 결제 테이블 생성 실패 ]");
+            paymentService.stockNotAvailable(orderEvent);
             throw new RuntimeException("received createOrder:orderId"+orderEvent.getOrderId(), e);
         }
 

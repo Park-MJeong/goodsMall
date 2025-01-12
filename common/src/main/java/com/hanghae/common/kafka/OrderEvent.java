@@ -6,24 +6,22 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Builder
 public class OrderEvent {
     private Long orderId;
-    private Long productId;
-    private Integer quantity;
     private BigDecimal totalPrice;
+    private List<OrderRequestDto> orderRequestDtoList;
     @JsonCreator
     public OrderEvent(
             @JsonProperty("orderId") Long orderId,
-            @JsonProperty("productId") Long productId,
-            @JsonProperty("quantity") Integer quantity,
-            @JsonProperty("totalPrice") BigDecimal totalPrice) {
+            @JsonProperty("totalPrice") BigDecimal totalPrice,
+            @JsonProperty("orderRequestDtoList") List<OrderRequestDto> orderRequestDtoList) {
         this.orderId = orderId;
-        this.productId = productId;
-        this.quantity = quantity;
         this.totalPrice = totalPrice;
+        this.orderRequestDtoList = orderRequestDtoList;
     }
 
 }

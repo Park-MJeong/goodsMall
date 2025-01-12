@@ -3,7 +3,6 @@ package com.hanghae.orderservice.controller;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.orderservice.dto.OrderListRequestDto;
 import com.hanghae.orderservice.dto.OrderProductStock;
-import com.hanghae.orderservice.dto.OrderRequestDto;
 import com.hanghae.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +58,7 @@ public class OrderController {
      */
 
     @PostMapping("")
-    public ResponseEntity<ApiResponse<?>> createOrder(@RequestHeader("X-Claim-userId") long userId, @RequestBody OrderRequestDto requestDto){
+    public ResponseEntity<ApiResponse<?>> createOrder(@RequestHeader("X-Claim-userId") Long userId, @RequestBody OrderListRequestDto requestDto){
         ApiResponse<?> response = orderService.createOrder(userId,requestDto);
         return ResponseEntity.ok(response);
     }
@@ -69,11 +68,11 @@ public class OrderController {
      * @param requestDto 제품 Id,수량을 포함하고 있는 요창 객체 (리스트)
      * @return 해당 주문 내역 안 상품 리스트
      */
-    @PostMapping("/carts")
-    public ResponseEntity<ApiResponse<?>> createCartOrder(@RequestBody OrderListRequestDto requestDto){
-        ApiResponse<?> response = orderService.createCartOrder(requestDto);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/carts")
+//    public ResponseEntity<ApiResponse<?>> createCartOrder(@RequestHeader("X-Claim-userId") Long userId,@RequestBody OrderListRequestDto requestDto){
+//        ApiResponse<?> response = orderService.createCartOrder(userId,requestDto);
+//        return ResponseEntity.ok(response);
+//    }
 
     /**
      * 상품 상태 수정하기(주문취소,환불)
