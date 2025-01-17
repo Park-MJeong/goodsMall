@@ -3,6 +3,7 @@ package com.hanghae.productservice.controller;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.dto.ProductDto;
+import com.hanghae.productservice.dto.ProductIdAndQuantityDto;
 import com.hanghae.productservice.service.CacheableProductService;
 import com.hanghae.productservice.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
@@ -59,13 +60,9 @@ public class ProductController {
        return productService.isAvailableProducts(productId);
     }
 
-    @PostMapping("/decreaseStock")
-    public void decreaseStock(@RequestParam Long productId,@RequestParam Integer quantity){
-        productService.decreaseStock(productId,quantity);
-    }
     @PostMapping("/increaseStock")
-    public void increaseStock(@RequestParam Long productId,@RequestParam Integer quantity){
-        productService.increaseStock(productId,quantity);
+    public void increaseStock(@RequestBody ProductIdAndQuantityDto productIdAndQuantityDto){
+        productService.increaseStock(productIdAndQuantityDto);
     }
 
 }

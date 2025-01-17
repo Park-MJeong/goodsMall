@@ -1,6 +1,7 @@
 package com.hanghae.productservice.dto;
 
 import com.hanghae.productservice.domain.Product;
+import com.hanghae.productservice.domain.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,11 +15,11 @@ public class SliceProductDto {
     private String productName;
     private BigDecimal productPrice;
     private LocalDateTime openDate;
-    private String status;
+    private ProductStatus status;
     private String message; // 메시지 필드 추가
 
     // slice의 한 객체에 담기는 정보
-    public SliceProductDto(long id, String productName, BigDecimal price, LocalDateTime openDate, String status) {
+    public SliceProductDto(long id, String productName, BigDecimal price, LocalDateTime openDate, ProductStatus status) {
         this.id = id;
         this.productName = productName;
         this.productPrice = price;

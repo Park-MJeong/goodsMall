@@ -18,6 +18,8 @@ public interface OrderRepository {
     Optional<Order> findByOrderId(Long orderId);
     List<Order> findByStatus(OrderStatus status, LocalDateTime date);
 
+    void orderStatusUpdating(OrderStatus status,Long orderId);
+
 
 
 }

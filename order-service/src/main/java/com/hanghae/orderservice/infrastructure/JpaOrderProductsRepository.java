@@ -10,8 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface JpaOrderProductsRepository extends JpaRepository<OrderProducts, Long> {
-    List<OrderProducts> findByOrder(Order order);
-
     @Query(
     """
     SELECT op.id,op.quantity FROM OrderProducts op WHERE op.order.id = :orderId

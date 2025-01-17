@@ -6,6 +6,7 @@ import com.hanghae.orderservice.domain.entity.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -42,5 +43,8 @@ public class OrderRepositoryImpl implements OrderRepository {
     public List<Order> findByStatus(OrderStatus status, LocalDateTime date){
         return jpaOrderRepository.findByStatusAndUpdatedAtBefore(status,date);
     }
-
+    @Override
+    public void orderStatusUpdating(OrderStatus status,Long orderId){
+        jpaOrderRepository.orderStatusUpdating(status,orderId);
+    }
 }

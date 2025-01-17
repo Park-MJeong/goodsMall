@@ -38,5 +38,16 @@ public class ProductRepositoryImpl implements ProductRepository {
         return jpaProductRepository.openingTodayProducts(start,end);
     }
 
+    @Override
+    public void saveAll(List<Product> products) {
+        jpaProductRepository.saveAll(products);
+    }
+
+    @Override
+    public void updateQuantityAndStatus(Long productId, Integer quantity) {
+        jpaProductRepository.updateQuantityAndStatus(productId, quantity);
+    }
+
+
 
 }

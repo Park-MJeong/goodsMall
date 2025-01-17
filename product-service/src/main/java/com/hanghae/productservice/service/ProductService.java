@@ -3,6 +3,10 @@ package com.hanghae.productservice.service;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
+import com.hanghae.common.kafka.OrderEvent;
+import com.hanghae.common.kafka.OrderRequestDto;
+import com.hanghae.productservice.domain.ProductStatus;
+import com.hanghae.productservice.dto.ProductIdAndQuantityDto;
 import com.hanghae.productservice.util.SliceUtil;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.domain.ProductRepository;
@@ -10,7 +14,6 @@ import com.hanghae.productservice.dto.ProductDto;
 import com.hanghae.productservice.dto.SliceProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,8 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.hanghae.common.util.RedisKeyUtil.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,39 +35,24 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final ProductRepository repository;
     private final CacheableProductService cacheableProductService;
-
-    private static final String REDIS_STOCK_KEY = "product:stock:";
     private final RedisTemplate<String,Integer> redisTemplate;
 
     /**
      * 공통 :제품정보 제공
      */
-
     public Product getProduct(Long id){
         Product product =repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         switch (product.getStatus()) {
-            case "Sold Out":
+            case SOLD_OUT:
                 throw new BusinessException(ErrorCode.PRODUCT_SOLD_OUT);
-            case "Pre-sale":
+            case PRE_SALE:
                 throw new BusinessException(ErrorCode.PRODUCT_PRE_SALE);
             default:
                 return product;
         }
     }
 
-
-
-    /**
-     * 공통 :제품수량체크
-     */
-    public Product checkStock(Long productId, int quantity) {
-        Product product = getProduct(productId);
-        if (product.getQuantity() < quantity) {
-            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT,"부족한 제품: "+productId);
-        }
-        return product;
-    }
 
     /**
      * 전체 상품 조회
@@ -91,37 +83,80 @@ public class ProductService {
         Product product = cacheableProductService.getProductAll(id);
 
 //        상세페이지 들어왔다는것은 살 확률 있음. 레디스에 재고넣어줌
-        String key = REDIS_STOCK_KEY + product.getId();
-        if(!product.getStatus().equals("Sold Out")){
-            if(redisTemplate.opsForValue().get(key) ==null){
-                redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
-            }
-        }
+        setRedisStock(product);
         return new ProductDto(product);
     }
 
 
-//    제품 구매시 재고감소
+//    제품 구매성공 시 레디스 재고 반영
     @Transactional
-    public void decreaseStock(Long productId,Integer quantity){
+    public void decreaseStock(OrderEvent orderEvent){
+        List<OrderRequestDto> orderRequestDtoList = orderEvent.getOrderRequestDtoList();
 
-        Product product = checkStock(productId, quantity);
-        log.info("감소 전{}",product.getQuantity());
+        // 1. 업데이트된 상품을 저장할 리스트
+        List<Product> updatedProducts = orderRequestDtoList.stream()
+                .map(this::updateProductStock)
+                .toList();
 
-        product.decreaseQuantity(quantity);
-        log.info("감소 후{}",product.getQuantity());
-        repository.save(product);
+//        2. 데이터베이스에 일괄 저장
+        repository.saveAll(updatedProducts);
+
+        log.info("재고 반영 완료: {}", updatedProducts.stream()
+                .map(product -> "상품 ID: " + product.getId() + ", 남은 재고: " + product.getQuantity())
+                .toList());
     }
+
+    private Product updateProductStock(OrderRequestDto orderRequestDto) {
+        Long productId = orderRequestDto.getProductId();
+
+        // 1. Redis에서 재고 정보 가져오기
+        Integer stock = getRedisStock(productId);
+        System.out.println("레디스에서 재고 정보 가져오기 : "+stock);
+
+        // 2. 데이터베이스에서 상품 정보 가져오기
+        Product product = getProduct(productId);
+
+        // 3. 상품 상태 업데이트
+        if(stock <=0){
+            product.toBuilder()
+                    .quantity(stock)
+                    .status(ProductStatus.SOLD_OUT)
+                    .build();
+        }
+
+        return product.toBuilder()
+                .quantity(stock)
+                .build();
+    }
+
 // 주문 취소 시 재고 반영
+//    @Transactional
+//    public void increaseStock(ProductIdAndQuantityDto productIdAndQuantityDto){
+//
+//        Product product = cacheableProductService.getProductAll(productIdAndQuantityDto.getProductId());
+//        log.info("재고 증가 처리 - 반영 전 재고: {}, 상품 ID: {}", product.getQuantity(), product.getId());
+//
+//        cacheableProductService.updateProduct(productIdAndQuantityDto);
+//        log.info("반영 후{}",product.getQuantity());
+//    }
     @Transactional
-    public void increaseStock(Long productId,Integer quantity){
-        Product product = checkStock(productId, quantity);
-        log.info("반영 전{}",product.getQuantity());
+    public void increaseStock(ProductIdAndQuantityDto productIdAndQuantityDto){
 
-        product.increaseQuantity(quantity);
-        log.info("반영 후{}",product.getQuantity());
-
+        Product product = cacheableProductService.getProductAll(productIdAndQuantityDto.getProductId());
+        log.info("재고 증가 처리 - 반영 전 재고: {}, 상품 ID: {}", product.getQuantity(), product.getId());
+        if(product.getStatus()==ProductStatus.SOLD_OUT){
+            product.toBuilder()
+                    .quantity(productIdAndQuantityDto.getQuantity()+ product.getQuantity())
+                    .status(ProductStatus.ON_SALE)
+                    .build();
+        }else {
+            product.toBuilder()
+                    .quantity(productIdAndQuantityDto.getQuantity()+ product.getQuantity())
+                    .build();
+        }
         repository.save(product);
+        cacheableProductService.deleteCache(productIdAndQuantityDto.getProductId());
+        log.info("반영 후{}",product.getQuantity());
     }
 
     /**
@@ -131,19 +166,69 @@ public class ProductService {
         log.info("[상품오픈하기]: 상품조회 진입");
 //        1. 상품조회
         Product product = cacheableProductService.getProductAll(productId);
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime openTime = product.getOpenDate();
-//        2-1.품절이거나 오픈전 상품
-        if(product.getStatus().equals("Sold Out")||!now.isAfter(openTime)){
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_ORDER);
-        }
+//        2. 품절이거나 판매준비중 상품여부 확인
+        validateProductTime(product);
 //        3. 오픈 상품 => 상태변경
-        product.statusOnSale(product);
-        repository.save(product);
-        String key = REDIS_STOCK_KEY+product.getId();
-        redisTemplate.opsForValue().set(key,product.getQuantity(), Duration.ofDays(1));
+        if(product.getStatus()!=ProductStatus.ON_SALE){
+            changeStatus(product,ProductStatus.ON_SALE);
+        }
+        if(redisTemplate.opsForValue().get(getStockKey(productId))==null){
+            //        4.레디스 재고 저장
+            setRedisStock(product);
+        }
 
         return product;
     }
+
+
+////    제품 수량 체크
+//    private Product checkStock(Long productId, int quantity) {
+//        Product product = getProduct(productId);
+//        if (product.getQuantity() < quantity) {
+//            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT,"재고 부족한 제품: "+productId);
+//        }
+//        return product;
+//    }
+
+//   품절이거나 판매준비중 상품여부 확인
+    private void validateProductTime(Product product) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime openTime = product.getOpenDate();
+        if(product.getStatus().equals(ProductStatus.SOLD_OUT)||!now.isAfter(openTime)){
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_ORDER,"주문 불가능한 상품: " + product.getId());
+        }
+    }
+
+//    레디스 정보 저장
+    private void setRedisStock(Product product){
+        String stockKey = getStockKey(product.getId());
+        String productKey = getProductKey(product.getId());
+
+        Map<String, Object> productMap = new HashMap<>();
+        productMap.put("productPrice", product.getProductPrice());
+        productMap.put("productName", product.getProductName());
+
+        redisTemplate.opsForValue().set(stockKey,product.getQuantity(), Duration.ofDays(1));
+        redisTemplate.opsForHash().putAll(productKey,productMap);
+//        redisTemplate.opsForValue().set(priceKey,product.getProductPrice(),Duration.ofDays(1));
+    }
+//    레디스에서 재고 가져오기
+    private Integer getRedisStock(Long productId){
+        String key = getStockKey(productId);
+        Integer stock =redisTemplate.opsForValue().get(key);
+        if(stock == null){
+            throw new BusinessException(ErrorCode.REDIS_NOT_FOUND);
+        }
+        return stock;
+    }
+
+
+//    제품 상태 변경
+    private void changeStatus(Product product, ProductStatus status){
+        Product newProduct = product.toBuilder()
+                .status(status)
+                .build();
+        repository.save(newProduct);
+    }
+
 }

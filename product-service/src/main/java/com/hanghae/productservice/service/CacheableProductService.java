@@ -6,7 +6,10 @@ import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.productservice.domain.Product;
 import com.hanghae.productservice.domain.ProductRepository;
 import com.hanghae.productservice.dto.CachedProduct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +21,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CacheableProductService {
     private final Map<Long, CachedProduct> staticCache = new ConcurrentHashMap<>();
-    private static final long CACHE_EXPIRATION_TIME = 60 * 1000;
+    private static final long CACHE_EXPIRATION_TIME =10 * 60 * 1000;
     private final ProductRepository repository;
     private final RedisTemplate<String, Object> redisTemplate;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    @PersistenceContext
+    private EntityManager entityManager;
     /**
      * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
      */
@@ -40,7 +46,15 @@ public class CacheableProductService {
         return  product;
     }
 
-
+//
+//    @Transactional
+//    public void updateProduct(ProductIdAndQuantityDto productIdAndQuantityDto){
+//        Long productId = productIdAndQuantityDto.getProductId();
+//        repository.updateQuantityAndStatus(productId,productIdAndQuantityDto.getQuantity());
+//        Product product = repository.findProductById(productIdAndQuantityDto.getProductId()).orElseThrow(
+//                ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+//        staticCache.put(productId,new CachedProduct(product, System.currentTimeMillis()));
+//    }
 
 //    public Product getProductAll(Long id){
 //
@@ -77,6 +91,8 @@ public class CacheableProductService {
 //        redisTemplate.opsForHash().putAll(key, productMap);  // Hash로 저장
 //    }
 
-
+    public void deleteCache(Long id){
+        staticCache.remove(id);
+    }
 
 }

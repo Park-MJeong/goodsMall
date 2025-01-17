@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long orderId;
@@ -37,22 +37,4 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
-    public Payment(Long orderId) {
-        this.orderId = orderId;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.status = PaymentStatus.PENDING;
-    }
-
-
-
-    public void statusFail(){
-        this.status = PaymentStatus.FAILED;
-    }
-    public void statusCancel(){
-        this.status = PaymentStatus.CANCELED;
-    }
-    public void statusComplete(){
-        this.status = PaymentStatus.COMPLETE;
-    }
 }

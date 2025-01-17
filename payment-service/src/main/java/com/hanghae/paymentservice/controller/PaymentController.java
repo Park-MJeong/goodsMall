@@ -6,6 +6,7 @@ import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.paymentservice.domain.entity.Payment;
 import com.hanghae.paymentservice.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,15 +35,27 @@ public class PaymentController {
      * @return 결제성공
      */
     @PostMapping("/process-payment")
-    public ResponseEntity<ApiResponse<?>> processPayment(@RequestParam Long orderId){
-        ApiResponse<?> response =null;
+    public ResponseEntity<ApiResponse<?>> processPayment(@RequestParam Long orderId) {
         try {
-//            카프카 메세지로 재고확인&결제테이블 생성 후 진입 가능
+            // 서비스 레이어 호출
             Payment payment = paymentService.isPaymentValid(orderId);
-            response =paymentService.processPayment(payment);
-        }catch (Exception e){
-            throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
+            ApiResponse<?> response = paymentService.processPayment(payment);
+            return ResponseEntity.ok(response);
+
+        } catch (BusinessException e) {
+            // 서비스에서 발생한 예외 처리
+            ApiResponse<?> errorResponse = ApiResponse.createException(
+                    e.getCode(),
+                    e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            // 기타 예외 처리 (예상치 못한 에러)
+            ApiResponse<?> errorResponse = ApiResponse.createException(
+                    ErrorCode.INTERNAL_SERVER_ERROR,
+                    "시스템 에러가 발생했습니다. 잠시 후 다시 시도해주세요."
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-        return ResponseEntity.ok(response);
     }
 }

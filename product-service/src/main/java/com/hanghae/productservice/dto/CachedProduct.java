@@ -1,15 +1,14 @@
 package com.hanghae.productservice.dto;
 
 import com.hanghae.productservice.domain.Product;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class CachedProduct {
-
-    private final Product product;
-    private final long timestamp;
+    private Product product;
+    private long timestamp;
 
 
 }

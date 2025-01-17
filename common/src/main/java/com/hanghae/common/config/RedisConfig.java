@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -89,6 +90,7 @@ public class RedisConfig {
 
         // 락 기본 타임아웃 설정 (예: 60초)
         config.setLockWatchdogTimeout(60000);
+        config.setCodec(new JsonJacksonCodec());
 
         return Redisson.create(config);
     }

@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
-@Builder
+@Setter
+@Builder(toBuilder = true)
 public class OrderEvent {
     private Long orderId;
     private BigDecimal totalPrice;

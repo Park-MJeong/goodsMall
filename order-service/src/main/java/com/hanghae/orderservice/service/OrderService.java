@@ -3,10 +3,11 @@ package com.hanghae.orderservice.service;
 import com.hanghae.common.api.ApiResponse;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.exception.BusinessException;
+import com.hanghae.common.kafka.OrderEvent;
 import com.hanghae.common.kafka.OrderRequestDto;
-import com.hanghae.orderservice.client.CartClient;
 import com.hanghae.orderservice.client.ProductClient;
-import com.hanghae.orderservice.client.dto.ProductNameAndPriceDTO;
+import com.hanghae.orderservice.client.dto.ProductIdAndQuantityDto;
+import com.hanghae.orderservice.client.dto.ProductNameAndPriceDto;
 import com.hanghae.orderservice.client.dto.ProductResponseDto;
 import com.hanghae.orderservice.domain.OrderProductRepository;
 import com.hanghae.orderservice.domain.OrderRepository;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +41,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
     private final ProductClient productClient;
-    private final CartClient cartClient;
     private final RedisTemplate<String,Integer> redisTemplate;
     private final OrderPaymentProducer orderPaymentProducer;
+    private final JdbcTemplate jdbcTemplate;
 
 
     /**
@@ -109,9 +111,9 @@ public class OrderService {
             long productId = productList.getProductId();
             int quantity = productList.getQuantity();
             Integer stock =redisTemplate.opsForValue().get(getStockKey(productId));
-            log.info("재고 체크{} ",productId);
+            log.info("재고 체크 Id: {} ",productId);
             if(stock == null || stock<quantity){
-                log.info("재고 부족{} ",productId);
+                log.info("재고 부족 Id{} ",productId);
                 return false;
             }
         }
@@ -136,7 +138,7 @@ public class OrderService {
 
         for(OrderRequestDto productList : dto.getOrderRequestDtoList()){
             long productId = productList.getProductId();
-            ProductNameAndPriceDTO responseDto = availableProducts(productId);
+            ProductNameAndPriceDto responseDto = availableProducts(productId);
 
             OrderProducts orderProducts = OrderProducts.builder()
                     .productId(productId)
@@ -159,14 +161,36 @@ public class OrderService {
 
 
 
-//    주문 테이블 상태 변경
+////    주문 테이블 상태 변경
+    @Transactional
     public void changeOrderStatus(Long orderId,OrderStatus orderStatus){
         Order order = getOrderById(orderId);
         Order newOrder = order.toBuilder()
                 .status(orderStatus)
                 .build();
+        orderRepository.orderStatusUpdating(orderStatus,orderId);
         orderRepository.save(newOrder);
     }
+//    주문 테이블 상태 변경
+    @Transactional
+    public void changeOrderListStatus(List<Long> orderIds, OrderStatus orderStatus){
+            String sql = "UPDATE `orders` SET `status` = ? WHERE `id` = ?";
+//            for(Long orderId : orderIds){
+//                System.out.println(orderId);
+//            }
+        // 배치 처리용 파라미터 생성
+        List<Object[]> batchArgs = orderIds.stream()
+                .map(orderId -> new Object[]{orderStatus.name(), orderId})
+                .toList();
+
+        // 배치 업데이트 실행
+        int[] updateCounts = jdbcTemplate.batchUpdate(sql, batchArgs);
+
+        // 로그 처리
+        log.info("주문 상태 변경 완료: 총 {}건 처리됨", updateCounts.length);
+
+    }
+
 //    주문 상품 장바구니에서 삭제 구현해야함
 
 
@@ -182,7 +206,11 @@ public class OrderService {
         }
 //        2.제품 테이블 재고 반영
         for(OrderProducts orderProducts : order.getOrderProducts()){
-           productClient.increaseStock(orderProducts.getProductId(),orderProducts.getQuantity());
+            ProductIdAndQuantityDto productIdAndQuantityDto = ProductIdAndQuantityDto.builder()
+                    .productId(orderProducts.getProductId())
+                    .quantity(orderProducts.getQuantity())
+                    .build();
+           productClient.increaseStock(productIdAndQuantityDto);
         }
 //        3.주문 테이블 상태, 취소로 변경
         changeOrderStatus(orderId,OrderStatus.CANCELED);
@@ -199,16 +227,15 @@ public class OrderService {
         return orderRepository.findByOrderId(orderId).orElseThrow(()->new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
-    public List<OrderProducts> getOrderProductList(Order order){
-        return orderProductRepository.findByOrder(order);
-    }
+//    public List<OrderProducts> getOrderProductList(Order order){
+//        return orderProductRepository.findByOrder(order);
+//    }
 
     //    주문상품테이블에서 상품이름이 추가된 dto
     private List<OrderProductDto> orderProductDtoList(Order order){
         return order.getOrderProducts().stream().map(
-
                 orderProducts -> {
-                    ProductNameAndPriceDTO productNameAndPriceDTO = availableProducts(orderProducts.getProductId());
+                    ProductNameAndPriceDto productNameAndPriceDTO = availableProducts(orderProducts.getProductId());
                     return new OrderProductDto(orderProducts,productNameAndPriceDTO.getProductName());
                 }).toList();
     }
@@ -218,8 +245,8 @@ public class OrderService {
         return productClient.information(productId);
     }
 //    구매가능한 상품정보만
-    private ProductNameAndPriceDTO availableProducts(Long productId){
-        return productClient.productStatus(productId);
+    private ProductNameAndPriceDto availableProducts(Long productId){
+        return  productClient.availableProducts(productId);
     }
 
     /**

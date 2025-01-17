@@ -1,13 +1,19 @@
 package com.hanghae.orderservice.kafka.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hanghae.common.kafka.OrderEvent;
-import com.hanghae.common.kafka.PaymentEvent;
 import com.hanghae.orderservice.domain.entity.OrderStatus;
 import com.hanghae.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.asm.TypeReference;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j(topic = "paymentOrderConsumer")
 @Component
@@ -17,35 +23,51 @@ public class PaymentOrderConsumer {
 
 
 //    재고 부족
-    @KafkaListener(topics = "stockNotAvailable",groupId = "payment-order")
-    public void stockNotAvailable(OrderEvent orderEvent) {
+    @KafkaListener(topics = "stockNotAvailable",groupId = "payment-order",containerFactory = "batchFactory")
+    public void stockNotAvailable(List<OrderEvent> orderEvents,Acknowledgment ack) {
         try{
-            log.info("[ 성공 ] received stockNotAvailable:orderId= {}", orderEvent.getOrderId());
-            orderService.changeOrderStatus(orderEvent.getOrderId(), OrderStatus.FAILED);
+            log.info("[ 재고 부족 수신] received stockNotAvailable");
+            List<Long> orderIds = new ArrayList<>();
+            for(OrderEvent orderEvent : orderEvents){
+                log.info("재고 부족 수신 아이디: "+orderEvent.getOrderId());
+                orderIds.add(orderEvent.getOrderId());
+            }
+            orderService.changeOrderListStatus(orderIds, OrderStatus.FAILED);
+            ack.acknowledge();
+
         }catch (Exception e){
-            throw new RuntimeException("[ 실패 ] received stockNotAvailable:orderId"+orderEvent.getOrderId(), e);
+            throw new RuntimeException("[ 재고 부족 수신 처리실패 ] received stockNotAvailable", e);
         }
 
     }
 
 //    결제 실패
-    @KafkaListener(topics = "failurePayment",groupId = "payment-order")
-    public void failurePayment(PaymentEvent payment) {
+    @KafkaListener(topics = "failurePayment",groupId = "payment-order",containerFactory = "batchFactory")
+    public void failurePayment(@Payload List<Long> orderIds, Acknowledgment ack) {
         try{
-            log.info("[ 성공 ] received failurePayment:orderId= {}", payment.getOrderId());
-            orderService.changeOrderStatus(payment.getOrderId(), OrderStatus.FAILED);
+            log.info("[ 결제 실패 수신 ] received failurePayment");
+            orderService.changeOrderListStatus(orderIds, OrderStatus.FAILED);
+            ack.acknowledge();
         }catch (Exception e){
-            throw new RuntimeException("[ 실패 ] received failurePayment:orderId"+payment.getOrderId(), e);
+            throw new RuntimeException("[ 결제 실패 수신 처리실패 ]  received failurePayment");
         }
     }
 //    결제 성공
-    @KafkaListener(topics = "failurePayment",groupId = "payment-order")
-    public void successPayment(PaymentEvent payment) {
+    @KafkaListener(topics = "successPayment",groupId = "payment-order",containerFactory = "batchFactory")
+    public void successPayment(List<OrderEvent> orderEvents, Acknowledgment ack) {
         try{
-            log.info("[ 성공 ] received failurePayment:orderId= {}", payment.getOrderId());
-            orderService.changeOrderStatus(payment.getOrderId(), OrderStatus.COMPLETE);
+//            log.info("[ 결제 성공 수신 ] received successPayment:orderId= {}", orderEvent.getOrderId());
+            log.info("[ 결제 성공 수신 ] received successPayment");
+            List<Long> orderIds = new ArrayList<>();
+            for(OrderEvent orderEvent : orderEvents){
+                log.info("성공아이디: "+orderEvent.getOrderId());
+                orderIds.add(orderEvent.getOrderId());
+            }
+            orderService.changeOrderListStatus(orderIds, OrderStatus.COMPLETE);
+            ack.acknowledge();
         }catch (Exception e){
-            throw new RuntimeException("[ 실패 ] received failurePayment:orderId"+payment.getOrderId(), e);
+            log.info("[ 결제 성공 수신 처리실패 ]  received successPayment");
+
         }
     }
 

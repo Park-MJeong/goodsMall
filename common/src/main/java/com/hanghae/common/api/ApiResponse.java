@@ -34,6 +34,9 @@ public class ApiResponse<T> {
         return new ApiResponse<>(null,null,new ApiError(errorCode.getStatusCode(),errorCode.getMessage()));
     }
 
+    public static ApiResponse<?> createException(ErrorCode errorCode,String message) {
+        return new ApiResponse<>(null,null,new ApiError(errorCode.getStatusCode(),message));
+    }
 
 
 }

@@ -12,7 +12,11 @@ public interface ProductRepository {
     List<Product> getProductList(String search, Long cursor, Pageable pageable);
 
     void save(Product product);
+
     List<Product> openingTodayProducts(LocalDateTime start, LocalDateTime end);
 
+    void saveAll(List<Product> products);
+
+    void updateQuantityAndStatus(Long productId, Integer quantity);
 
 }

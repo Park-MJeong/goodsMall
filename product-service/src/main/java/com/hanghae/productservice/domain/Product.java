@@ -1,9 +1,8 @@
 package com.hanghae.productservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.hanghae.common.exception.ErrorCode;
-import com.hanghae.common.exception.BusinessException;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,8 +13,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "products")
 public class Product implements Serializable {
     @Id
@@ -39,9 +39,10 @@ public class Product implements Serializable {
     private Integer quantity;
 
     @Column(name="status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status;
 
-    public Product(Long id, String productName, String description, BigDecimal productPrice, LocalDateTime openDate, int quantity, String status) {
+    public Product(Long id, String productName, String description, BigDecimal productPrice, LocalDateTime openDate, int quantity, ProductStatus status) {
         this.id = id;
         this.productName = productName;
         this.description = description;
@@ -52,29 +53,14 @@ public class Product implements Serializable {
 
     }
 
-    //    제품 재고 감소
-    public void decreaseQuantity(int quantity) {
-        if (this.quantity < quantity) {
-            throw new BusinessException(ErrorCode.QUANTITY_INSUFFICIENT);
-        }
-        this.quantity -= quantity;
-        updateStatus();
-    }
-//    제품 재고 증가
-    public void increaseQuantity(int quantity) {
-        this.quantity += quantity;
-        updateStatus();
-    }
 
-    private void updateStatus(){
-        if(this.quantity==0) this.status ="Sold out";
-        else if(this.quantity > 0 && this.status.equals("Sold Out")) {
-            this.status = "On Sale";
-        }
-    }
+////    제품 재고 증가
+//    public void increaseQuantity(int quantity) {
+//        this.quantity += quantity;
+//        updateStatus();
+//    }
 
-    public void statusOnSale(Product product){
-        this.status = "On Sale";
-    }
+
+
 
 }

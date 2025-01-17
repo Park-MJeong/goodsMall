@@ -1,5 +1,6 @@
 package com.hanghae.paymentservice.kafka.producer;
 
+import com.hanghae.common.kafka.OrderEvent;
 import com.hanghae.common.kafka.OrderRequestDto;
 import com.hanghae.common.kafka.PaymentEvent;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +17,8 @@ import java.util.List;
 public class PaymentProductProducer {
     private final KafkaTemplate<String,Object> kafkaTemplate;
 
-    public void successPayment(Long orderId){
+    public void successPayment(OrderEvent orderEvent){
         log.info("successPaymentEvent");
-        PaymentEvent paymentEvent = PaymentEvent.builder()
-                .orderId(orderId)
-                .build();
-        kafkaTemplate.send("successPayment", paymentEvent);
+        kafkaTemplate.send("successPayment", orderEvent);
     }
 }

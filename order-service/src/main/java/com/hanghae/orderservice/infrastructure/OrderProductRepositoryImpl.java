@@ -21,10 +21,6 @@ public class OrderProductRepositoryImpl implements OrderProductRepository {
         repository.save(orderProducts);
     }
 
-    @Override
-    public List<OrderProducts> findByOrder(Order order) {
-        return repository.findByOrder(order);
-    }
 
     @Override
     public List<OrderProductStock> findStockByOrderId(Long orderId) {

@@ -1,11 +1,12 @@
 package com.hanghae.paymentservice.kafka.producer;
 
 import com.hanghae.common.kafka.OrderEvent;
-import com.hanghae.common.kafka.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j(topic = "paymentOrderProducer")
 @Component
@@ -15,17 +16,20 @@ public class PaymentOrderProducer {
 
     //    재고부족
     public void stockNotAvailable(OrderEvent orderEvent){
+        log.info("stockNotAvailable");
         kafkaTemplate.send("stockNotAvailable", orderEvent);
     }
 
 //    결제 실패
-    public void failurePayment(PaymentEvent paymentEvent){
-        kafkaTemplate.send("failurePayment", paymentEvent);
+    public void failurePayment(Long orderId){
+        log.info("failurePayment");
+        kafkaTemplate.send("failurePayment", orderId);
     }
 
 //    결제 성공
-    public void successPayment(PaymentEvent paymentEvent){
-        kafkaTemplate.send("successPayment", paymentEvent);
+    public void successPayment(OrderEvent orderEvent){
+        log.info("successPayment");
+        kafkaTemplate.send("successPayment", orderEvent);
     }
 
 }

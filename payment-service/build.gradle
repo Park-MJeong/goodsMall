@@ -39,6 +39,8 @@ dependencies {
 
     implementation 'org.springframework.kafka:spring-kafka'
 
+    implementation group: 'it.ozimov', name: 'embedded-redis', version: '0.7.1'
+
 
 
 
