@@ -2,14 +2,15 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 export let options = {
     stages: [
-        { duration: '1m', target: 100 }, // 1분 동안 10,00명까지 증가
+        { duration: '1m', target: 1000 }, // 1분 동안 10,00명까지 증가
         { duration: '10s', target: 0 },     // 10 동안 종료
     ],
 };
 export default function () {
     const searchParam = encodeURIComponent('블랙');
     // 1. HTTP 요청 전송
-    const url=`http://localhost:9003/api/products?search=${searchParam}&size=10&cursor=1`;
+    // const url=`http://localhost:9003/api/products?search=${searchParam}&size=10&cursor=1`;
+    const url=`http://localhost:9003/api/products/1`;
 
     const payload = JSON.stringify({
         // search: '블랙',

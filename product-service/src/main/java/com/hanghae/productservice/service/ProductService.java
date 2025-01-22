@@ -155,7 +155,7 @@ public class ProductService {
                     .build();
         }
         repository.save(product);
-        cacheableProductService.deleteCache(productIdAndQuantityDto.getProductId());
+        cacheableProductService.refreshProductCache(product.getId());
         log.info("반영 후{}",product.getQuantity());
     }
 

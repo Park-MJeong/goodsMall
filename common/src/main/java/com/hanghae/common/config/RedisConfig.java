@@ -1,6 +1,9 @@
 package com.hanghae.common.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -41,19 +44,32 @@ public class RedisConfig {
         redisStandaloneConfiguration.setPassword(password);
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        // 기본 캐시 구성 (캐시 만료 시간: 1시간)
-        RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))  // 1시간 캐시 만료 시간 설정
-                .disableCachingNullValues()   // null 값 캐시 저장 방지
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.
-                        fromSerializer(new GenericJackson2JsonRedisSerializer())); // JSON 직렬화
 
-        return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(defaultCacheConfig)
-                .build();
-    }
+//    @Bean
+//    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        objectMapper.registerModule(new JavaTimeModule());
+//
+////        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // ISO-8601 형식 사용
+////        objectMapper.activateDefaultTyping(
+////                LaissezFaireSubTypeValidator.instance,
+////                ObjectMapper.DefaultTyping.NON_FINAL,
+////                JsonTypeInfo.As.PROPERTY
+////        ); // 타입 정보 포함 설정
+//
+//        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+//
+//        RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+//                .entryTtl(Duration.ofHours(1)) // 1시간 캐시 만료
+//                .disableCachingNullValues() // null 값 캐시 금지
+//                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+//                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
+//
+//        return RedisCacheManager.builder(redisConnectionFactory)
+//                .cacheDefaults(defaultCacheConfig)
+//                .build();
+//    }
+
 
     @Bean
     public RedisTemplate<?, ?> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -70,6 +86,7 @@ public class RedisConfig {
         // Hash Key-Value 형태로 직렬화
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(serializer);
+
 
         return redisTemplate;
     }

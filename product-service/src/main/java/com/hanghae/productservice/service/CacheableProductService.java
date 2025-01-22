@@ -10,12 +10,19 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Slf4j
 public class CacheableProductService {
-    private final Map<Long, CachedProduct> staticCache = new ConcurrentHashMap<>();
     private static final long CACHE_EXPIRATION_TIME =10 * 60 * 1000;
     private final ProductRepository repository;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -35,15 +41,10 @@ public class CacheableProductService {
      * 공통 :제품정보 제공 (상태 예외처리 없이 전달)
      */
     @Transactional(readOnly = true)
+    @Cacheable(key = "#id",cacheNames = "products")
     public Product getProductAll(Long id){
-        CachedProduct cachedProduct = staticCache.get(id);
-        if (cachedProduct != null && (System.currentTimeMillis() - cachedProduct.getTimestamp()) < CACHE_EXPIRATION_TIME) {
-            return cachedProduct.getProduct();
-        }
-        Product product = repository.findProductById(id).orElseThrow(
+        return  repository.findProductById(id).orElseThrow(
                 ()->new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        staticCache.put(id,new CachedProduct(product, System.currentTimeMillis()));
-        return  product;
     }
 
 //
@@ -91,8 +92,15 @@ public class CacheableProductService {
 //        redisTemplate.opsForHash().putAll(key, productMap);  // Hash로 저장
 //    }
 
-    public void deleteCache(Long id){
-        staticCache.remove(id);
+    /**
+     * 캐시 강제 갱신 (optional)
+     */
+    @CacheEvict(key = "#id", cacheNames = "products")
+//    @Transactional
+    public void refreshProductCache(Long id) {
+        repository.findProductById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        log.info("Cache refreshed for product id: {}", id);
     }
 
 }
