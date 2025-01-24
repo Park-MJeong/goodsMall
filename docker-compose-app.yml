@@ -26,14 +26,13 @@ services:
     depends_on:
       - mysql
       - redis
-      - redis-insight
       - eureka-server
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/cart_service?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://gm_mysql:3306/cart_service?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER_NAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -47,17 +46,17 @@ services:
     depends_on:
       - mysql
       - redis
-      - redis-insight
       - eureka-server
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/order_service?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://gm_mysql:3306/order_service?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER_NAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: gm_kafka:9092
     ports:
       - "9002:9002"
     networks:
@@ -70,17 +69,17 @@ services:
     depends_on:
       - mysql
       - redis
-      - redis-insight
       - eureka-server
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/product_service?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://gm_mysql:3306/product_service?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER_NAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: gm_kafka:9092
     ports:
       - "9003:9003"
     networks:
@@ -93,14 +92,13 @@ services:
     depends_on:
       - mysql
       - redis
-      - redis-insight
       - eureka-server
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/user_service?allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://gm_mysql:3306/user_service?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER_NAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -115,22 +113,23 @@ services:
     depends_on:
       - mysql
       - redis
-      - redis-insight
       - eureka-server
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/payment-service?allowPublicKeyRetrieval=true
+      SPRING_KAFKA_CONSUMER_GROUP_ID: payment-order
+      SPRING_DATASOURCE_URL: jdbc:mysql://gm_mysql:3306/payment_service?allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER_NAME}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis1
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: gm_kafka:9092
     ports:
-      - "9004:9004"
+      - "9005:9005"
     networks:
       - goodsmall-network
 
 networks:
   goodsmall-network:
-    external: true
+    driver: bridge

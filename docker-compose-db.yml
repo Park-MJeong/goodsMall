@@ -17,20 +17,20 @@ services:
     networks:
       - goodsmall-network
 
-  redis-insight:
-    image: redis/redisinsight
-    container_name: gm_redisinsight
-    restart: always
-    ports:
-      - 5540:5540
-    volumes:
-      - D:/Docker/redisinsight_volume:/data
-    environment:
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    networks:
-      - goodsmall-network
+#  redis-insight:
+#    image: redis/redisinsight
+#    container_name: gm_redisinsight
+#    restart: always
+#    ports:
+#      - 5540:5540
+#    volumes:
+#      - D:/Docker/redisinsight_volume:/data
+#    environment:
+#      - REDIS_URL=redis://redis:6379
+#    depends_on:
+#      - redis
+#    networks:
+#      - goodsmall-network
 
   mysql:
     image: mysql
@@ -57,28 +57,51 @@ services:
       - goodsmall-network
 
   zookeeper:
-    image: wurstmeister/zookeeper
+    image: bitnami/zookeeper:latest
     container_name: gm_zookeeper
     ports:
       - "2181:2181"
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    healthcheck:
+      test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - goodsmall-network
 
   kafka:
-    image: wurstmeister/kafka
+    image: bitnami/kafka:latest
     container_name: gm_kafka
     ports:
       - "9092:9092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+#      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: gm_zookeeper:2181
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://gm_kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+#      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+#      KAFKA_MIN_INSYNC_REPLICAS: 2
+    depends_on:
+      - zookeeper
+    networks:
+      - goodsmall-network
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: kafka-exporter
+    ports:
+      - "9308:9308"
+    command:
+      - "--kafka.server=gm_kafka:9092"
+      - "--web.listen-address=0.0.0.0:9308"
+    depends_on:
+      - kafka
     networks:
       - goodsmall-network
 
 
 networks:
   goodsmall-network:
-    driver: bridge
+    external: true
