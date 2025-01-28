@@ -161,7 +161,7 @@ public class OrderService {
 
 
 
-////    주문 테이블 상태 변경
+//    주문 테이블 상태 변경
     @Transactional
     public void changeOrderStatus(Long orderId,OrderStatus orderStatus){
         Order order = getOrderById(orderId);

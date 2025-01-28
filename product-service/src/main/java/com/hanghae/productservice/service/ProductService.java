@@ -203,6 +203,9 @@ public class ProductService {
     private void setRedisStock(Product product){
         String stockKey = getStockKey(product.getId());
         String productKey = getProductKey(product.getId());
+        if(redisTemplate.opsForValue().get(stockKey)!=null){
+            return;
+        }
 
         Map<String, Object> productMap = new HashMap<>();
         productMap.put("productPrice", product.getProductPrice());
