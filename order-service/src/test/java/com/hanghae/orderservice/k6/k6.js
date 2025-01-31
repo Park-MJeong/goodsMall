@@ -7,11 +7,19 @@ let orderDuration = new Trend('order_duration'); // 주문 요청 시간 측정
 
 // 환경 설정
 export let options = {
-    stages: [
-        { duration: '1m', target: 800},  // 1분 동안 100명 동시 사용자 시뮬레이션
-        // { duration: '2m', target: 200 },  // 2분 동안 200명 동시 사용자 시뮬레이션
-        // { duration: '1m', target: 0 },    // 1분 동안 점차적으로 0명으로 감소
-    ],
+    // stages: [
+    //     { duration: '1m', target: 10},  // 1분 동안 100명 동시 사용자 시뮬레이션
+    //     // { duration: '2m', target: 200 },  // 2분 동안 200명 동시 사용자 시뮬레이션
+    //     // { duration: '1m', target: 0 },    // 1분 동안 점차적으로 0명으로 감소
+    // ],
+    scenarios: {
+        users_test: {
+            executor: 'per-vu-iterations',
+            vus: 110,  // 딱 110명, 재고 100
+            iterations: 1,  // 1명당 1회 실행
+        },
+    },
+
 };
 
 // 주문 생성 API 테스트
@@ -36,7 +44,6 @@ export default function () {
     // 응답 상태 코드 및 시간 체크
     check(response, {
         '응답 코드가 200이어야 한다': (r) => r.status === 200,
-        // '응답 시간 2초 이내': (r) => r.timings.duration < 2000,  // 응답 시간 체크
     });
 
 

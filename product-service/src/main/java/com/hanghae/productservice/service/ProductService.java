@@ -172,10 +172,7 @@ public class ProductService {
         if(product.getStatus()!=ProductStatus.ON_SALE){
             changeStatus(product,ProductStatus.ON_SALE);
         }
-        if(redisTemplate.opsForValue().get(getStockKey(productId))==null){
-            //        4.레디스 재고 저장
-            setRedisStock(product);
-        }
+        setRedisStock(product);
 
         return product;
     }

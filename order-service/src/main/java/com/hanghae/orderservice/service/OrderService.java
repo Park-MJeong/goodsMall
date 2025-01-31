@@ -113,7 +113,7 @@ public class OrderService {
             Integer stock =redisTemplate.opsForValue().get(getStockKey(productId));
             log.info("재고 체크 Id: {} ",productId);
             if(stock == null || stock<quantity){
-                log.info("재고 부족 Id{} ",productId);
+                log.info("재고 부족 Id: {} ",productId);
                 return false;
             }
         }

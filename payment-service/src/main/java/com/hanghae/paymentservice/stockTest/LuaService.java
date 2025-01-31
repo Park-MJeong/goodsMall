@@ -46,6 +46,7 @@ public class LuaService {
 
     // Lua 스크립트를 사용한 재고 감소
     public boolean decreaseStock(String stockKey, int quantity) {
+        log.info("감소 전 재고: {}",redisTemplate.opsForValue().get(stockKey));
         RFuture<Long> resultFuture = redissonClient.getScript().evalAsync(
                 RScript.Mode.READ_WRITE,
                 """
@@ -63,7 +64,7 @@ public class LuaService {
         );
 
         try {
-            log.info("감소 전 재고: {}",redisTemplate.opsForValue().get(stockKey));
+
             Long result = resultFuture.toCompletableFuture().get(1, TimeUnit.SECONDS);
             if (result == -1) {
                 return false;
@@ -83,36 +84,4 @@ public class LuaService {
     }
 
 
-//    private boolean checkStock(List<OrderRequestDto> orderRequestDtos) {
-//        for (OrderRequestDto orderRequestDto : orderRequestDtos) {
-//            Long productId = orderRequestDto.getProductId();
-//            int quantity = orderRequestDto.getQuantity();
-//            String key = getStockKey(productId);
-//            // Lua 스크립트 실행
-//            RFuture<Long> resultFuture = redissonClient.getScript().evalAsync(
-//                    RScript.Mode.READ_WRITE,
-//                    """
-//                                  local key = KEYS[1]
-//                                   local quantity = tonumber(ARGV[1])
-//                                   local currentStock = redis.call('GET', key)
-//                                   if not currentStock or tonumber(currentStock) < quantity then
-//                                       return -1
-//                                   end
-//                                   return redis.call('DECRBY', stockKey, quantity)
-//                            """
-//                    ,
-//                    RScript.ReturnType.INTEGER,
-//                    Collections.singletonList(key),
-//                    quantity);
-//            try {
-//                Long result = resultFuture.toCompletableFuture().get(1, TimeUnit.SECONDS);
-//                return result != -1;
-//            } catch (Exception e) {
-//                log.error("Redis Lua 스크립트 실행 중 오류 발생", e);
-//                return false;
-//            }
-//        }
-//
-//        return true;
-//    }
 }

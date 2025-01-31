@@ -39,23 +39,23 @@ public class KafkaConfig {
         config.put(VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(KEY_DESERIALIZER_CLASS, StringDeserializer.class);
         config.put(VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-//        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderEvent.class);
-//        config.put(FETCH_MAX_WAIT_MS_CONFIG,1000);
-//        config.put(MAX_POLL_RECORDS_CONFIG,500);
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderEvent.class);
+        config.put(FETCH_MAX_WAIT_MS_CONFIG,1000);
+        config.put(MAX_POLL_RECORDS_CONFIG,500);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.hanghae.common.kafka");
 
         return new DefaultKafkaConsumerFactory<>(config);
     }
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> batchFactory() {
-        final ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
-        factory.getContainerProperties().setIdleBetweenPolls(500); //poll사이의 최대 대기 시간
-        factory.setBatchListener(true);
-        factory.setConcurrency(3);
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // 수동 커밋
-        return factory;
-    }
+//    @Bean
+//    public ConcurrentKafkaListenerContainerFactory<String, Object> batchFactory() {
+//        final ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+//        factory.setConsumerFactory(consumerFactory());
+//        factory.getContainerProperties().setIdleBetweenPolls(500); //poll사이의 최대 대기 시간
+//        factory.setBatchListener(true);
+//        factory.setConcurrency(3);
+//        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // 수동 커밋
+//        return factory;
+//    }
 
     @Bean
     public ProducerFactory<String,Object> producerFactory(){

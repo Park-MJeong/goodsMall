@@ -47,9 +47,10 @@ public class PaymentOrderConsumer {
         try{
             log.info("[ 결제 실패 수신 ] received failurePayment");
             orderService.changeOrderListStatus(orderIds, OrderStatus.FAILED);
-            ack.acknowledge();
         }catch (Exception e){
             throw new RuntimeException("[ 결제 실패 수신 처리실패 ]  received failurePayment");
+        }finally {
+            ack.acknowledge();
         }
     }
 //    결제 성공
@@ -64,10 +65,11 @@ public class PaymentOrderConsumer {
                 orderIds.add(orderEvent.getOrderId());
             }
             orderService.changeOrderListStatus(orderIds, OrderStatus.COMPLETE);
-            ack.acknowledge();
         }catch (Exception e){
             log.info("[ 결제 성공 수신 처리실패 ]  received successPayment");
 
+        }finally {
+            ack.acknowledge();
         }
     }
 

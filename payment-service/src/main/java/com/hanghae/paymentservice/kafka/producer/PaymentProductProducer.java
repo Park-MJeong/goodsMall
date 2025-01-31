@@ -18,7 +18,7 @@ public class PaymentProductProducer {
     private final KafkaTemplate<String,Object> kafkaTemplate;
 
     public void successPayment(OrderEvent orderEvent){
-        log.info("successPaymentEvent");
+        log.info("successPayment");
         kafkaTemplate.send("successPayment", orderEvent);
     }
 }

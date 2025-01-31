@@ -20,7 +20,6 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    //
 //    @PostMapping("/initPayment")
 //    public ResponseEntity<ApiResponse<?>> initPayment(@RequestParam Long orderId,@RequestHeader("X-Claim-userId") Long userId){
 //        log.info("[결제화면 진입 API] userId{}",userId);

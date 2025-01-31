@@ -7,35 +7,28 @@ import com.hanghae.common.exception.BusinessException;
 import com.hanghae.common.exception.ErrorCode;
 import com.hanghae.common.kafka.OrderEvent;
 import com.hanghae.common.kafka.OrderRequestDto;
+import com.hanghae.paymentservice.client.OrderClient;
+import com.hanghae.paymentservice.client.dto.OrderProductStock;
 import com.hanghae.paymentservice.domain.PaymentRepository;
 import com.hanghae.paymentservice.domain.entity.Payment;
 import com.hanghae.paymentservice.domain.entity.PaymentStatus;
 import com.hanghae.paymentservice.dto.PaymentStatusDto;
 import com.hanghae.paymentservice.kafka.producer.PaymentOrderProducer;
 import com.hanghae.paymentservice.kafka.producer.PaymentProductProducer;
+import com.hanghae.paymentservice.stockTest.LuaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RFuture;
-import org.redisson.api.RLock;
-import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
-import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.hanghae.common.util.RedisKeyUtil.getPaymentKey;
 import static com.hanghae.common.util.RedisKeyUtil.getStockKey;
@@ -46,10 +39,12 @@ import static com.hanghae.common.util.RedisKeyUtil.getStockKey;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final RedisTemplate<String,Object> redisTemplate;
+    private final LuaService luaService;
     private final RedissonClient redissonClient;
     private final PaymentOrderProducer paymentOrderProducer;
     private final PaymentProductProducer paymentProductProducer;
     private final JdbcTemplate jdbcTemplate;
+    private final OrderClient orderClient;
     private final Map<String,Integer> decreaseStock = new ConcurrentHashMap<>();
 
 
@@ -58,49 +53,36 @@ public class PaymentService {
      * 재고 파악 후 결제 테이블 생성
      * */
     @Transactional
-    public void initPayment(List<OrderEvent> orderEvents) {
-        List<Payment> paymentsToSave = new ArrayList<>(); // saveAll에 사용할 리스트
-        for (OrderEvent orderEvent : orderEvents) {
-            Long orderId = orderEvent.getOrderId();
-            String lockKey = "lock:product:"+orderId;
-            RLock lock = redissonClient.getLock(lockKey); // 분산락 객체 반환
-
-            try {
-                if (!lock.tryLock(10, 2, TimeUnit.SECONDS)) {
-                    throw new IllegalArgumentException("락 획득 실패");
-                }
-                Payment payment = paymentRepository.findByOrderId(orderEvent.getOrderId());
-                if (payment != null) {
-                    throw new BusinessException(ErrorCode.PAYMENT_ALREADY);
-                }
-//          1. 재고 확인
-                List<OrderRequestDto> orderRequestDtos = orderEvent.getOrderRequestDtoList();
-                if (!checkStock(orderRequestDtos)){
-//                1-1. 재고 확보 실패, 주문테이블 상태 변경 이벤트 발행
+    public void initPayment(OrderEvent orderEvent) {
+        Long orderId = orderEvent.getOrderId();
+        Payment payment = paymentRepository.findByOrderId(orderEvent.getOrderId());
+        if (payment != null) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY);
+        }
+        try {
+            for (OrderRequestDto dto : orderEvent.getOrderRequestDtoList()) {
+                String stockKey = getStockKey(dto.getProductId());
+//                1. 재고 확인
+                boolean success = luaService.decreaseStock(stockKey, dto.getQuantity());
+                if(success){
+                    decreaseStock.put(stockKey,dto.getQuantity()); // 상품리스트중 한개라도 재고확보 실패시 롤백위해 필요
+                } else {
                     throw new BusinessException(ErrorCode.FAILED_QUANTITY_PAYMENT);
                 }
-//          2. 결제 테이블 생성
+
+//              2. 결제 테이블 생성
                 Payment newPayment = createPayment(orderId);
-                paymentsToSave.add(newPayment);
+                paymentRepository.save(newPayment);
                 log.info("[결제 테이블 생성 완료] paymentStatus: {}", newPayment.getStatus());
 
                 //        10분이상 결제 되지않으면 결제 취소
                 String key = getPaymentKey(newPayment.getId());
                 redisTemplate.opsForValue().set(key,orderEvent,Duration.ofMinutes(10));
 
-            }catch (InterruptedException e){
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
             }
-            finally {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
-            }
-        }
-        if (!paymentsToSave.isEmpty()) {
-            batchInsertPayments(paymentsToSave);
-            log.info("[결제 테이블 생성 완료] 저장된 결제 건수: {}", paymentsToSave.size());
+        } catch (Exception e) {
+//            재고 확보 실패시 주문실패
+            stockNotAvailable(orderEvent);
         }
 
     }
@@ -114,27 +96,8 @@ public class PaymentService {
                 .updatedAt(LocalDateTime.now())
                 .status(PaymentStatus.PENDING)
                 .build();
-//        paymentRepository.save(payment);
     }
-    private void batchInsertPayments(List<Payment> paymentsToSave) {
-        String sql = "INSERT INTO payments (id, order_id, created_at, updated_at, status) VALUES (?, ?, ?, ?, ?)";
-        List<Object[]> batchArgs = paymentsToSave.stream()
-                .map(payment -> new Object[]{
-                        payment.getId(), // id
-                        payment.getOrderId(), // orderId
-                        payment.getCreatedAt(), // createdAt
-                        payment.getUpdatedAt(), // updatedAt
-                        payment.getStatus().name() // status
-                })
-                .toList();
 
-        try {
-            jdbcTemplate.batchUpdate(sql, batchArgs);
-        } catch (Exception e) {
-            e.printStackTrace(); // 예외 출력
-            System.out.println("Error during batch insert: " + e.getMessage());
-        }
-    }
 
 //    api에서 결제화면 진입전 테이블 생성유무 확인
     public Payment isPaymentValid(Long orderId) {
@@ -184,13 +147,20 @@ public class PaymentService {
     public void cancelPayment(Long paymentId){
         PaymentStatusDto paymentStatusDto= getStatus(paymentId);
         PaymentStatus status = paymentStatusDto.getPaymentStatus();
-        Long orderId = paymentStatusDto.getOrderId();
-
         if(status ==PaymentStatus.PENDING){
+//            orderId로 해당 상품과 갯수리스트 가져옴
+            Long orderId = paymentStatusDto.getOrderId();
+//            확보했던 재고 rollback
+            List<OrderProductStock> orderProductStockList = getStockList(orderId);
+            for(OrderProductStock orderProductStock:orderProductStockList){
+                String key = getStockKey(orderProductStock.getOrderProductId());
+                decreaseStock.put(key,orderProductStock.getQuantity());
+            }
+
             changePaymentStatus(paymentId,PaymentStatus.CANCELED);
             log.info("10분이내 결제가 이루어지지않아 결제 취소되었습니다.");
+            stockRollback(decreaseStock);
             failurePayment(orderId);
-
         }
     }
 
@@ -215,39 +185,8 @@ public class PaymentService {
         return true;
     }
 
-//    private boolean checkStock(List<OrderRequestDto> orderRequestDtos) {
-//        for (OrderRequestDto orderRequestDto : orderRequestDtos) {
-//            Long productId = orderRequestDto.getProductId();
-//            int quantity = orderRequestDto.getQuantity();
-//            String key = getStockKey(productId);
-//            // Lua 스크립트 실행
-//            RFuture<Long> resultFuture = redissonClient.getScript().evalAsync(
-//                    RScript.Mode.READ_WRITE,
-//                    """
-//                                  local key = KEYS[1]
-//                                   local quantity = tonumber(ARGV[1])
-//                                   local currentStock = redis.call('GET', key)
-//                                   if not currentStock or tonumber(currentStock) < quantity then
-//                                       return -1
-//                                   end
-//                                   return redis.call('DECRBY', stockKey, quantity)
-//                            """
-//                    ,
-//                    RScript.ReturnType.INTEGER,
-//                    Collections.singletonList(key),
-//                    quantity);
-//            try {
-//                Long result = resultFuture.toCompletableFuture().get(1, TimeUnit.SECONDS);
-//                return result != -1;
-//            } catch (Exception e) {
-//                log.error("Redis Lua 스크립트 실행 중 오류 발생", e);
-//                return false;
-//            }
-//        }
-//
-//        return true;
-//    }
-//    재고확보 실패,rollback
+
+//    재고확보 실패 or 결제 취소시 재고 rollback
     private void stockRollback(Map<String,Integer> decreaseStock){
         decreaseStock.forEach((key, quantity) ->
                 redisTemplate.opsForValue().increment(key, quantity)
@@ -300,5 +239,9 @@ public class PaymentService {
     //    결제 취소,실패 시 order-service 로 보내는 kafka
     public void failurePayment(Long orderId) {
         paymentOrderProducer.failurePayment(orderId);
+    }
+
+    private List<OrderProductStock> getStockList(Long orderId){
+        return orderClient.orderProductStock(orderId);
     }
 }

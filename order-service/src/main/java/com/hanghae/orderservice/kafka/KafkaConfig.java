@@ -56,7 +56,7 @@ public class KafkaConfig {
 //        config.put(MAX_POLL_RECORDS_CONFIG,500);
 //        config.put(MAX_POLL_INTERVAL_MS_CONFIG,3000);
 //        config.put(FETCH_MAX_WAIT_MS_CONFIG,500);
-//        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderEvent.class);
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderEvent.class);
         return new DefaultKafkaConsumerFactory<>(config);
     }
     @Bean
@@ -65,8 +65,7 @@ public class KafkaConfig {
         factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties().setIdleBetweenPolls(500); //poll사이의 최대 대기 시간
         factory.setBatchListener(true);
-        factory.setConcurrency(3);
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // 수동 커밋
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE); // 수동 커밋
         return factory;
     }
 
@@ -94,11 +93,9 @@ public class KafkaConfig {
     @Bean
     public ProducerFactory<String,Object> producerFactory(){
         Map<String, Object> config = new HashMap<>();
-
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,bootstrapServers);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,JsonSerializer.class);
-
         return new DefaultKafkaProducerFactory<>(config);
     }
 
